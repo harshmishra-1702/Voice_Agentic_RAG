@@ -16,12 +16,28 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from livekit import api
 from pydantic import BaseModel
+import shutil
+import subprocess
+import sys
+
+root_dir = os.path.dirname(os.path.dirname(__file__))
+if root_dir not in sys.path:
+    sys.path.append(root_dir)
+
+try:
+    import ingest
+    import threading
+    # Preload the heavy PyTorch model and ChromaDB into memory in a background thread 
+    # the moment the server starts, so uploads are instantly fast.
+    threading.Thread(target=ingest.get_collection, daemon=True).start()
+except Exception as e:
+    print("Warning: Could not preload ingestion models:", e)
 
 app = FastAPI(title="VoiceOps Token Server")
 
@@ -104,6 +120,27 @@ async def generate_token(req: TokenRequest) -> TokenResponse:
 async def health() -> dict[str, str]:
     """Health check endpoint for the stress test script."""
     return {"status": "ok", "service": "voiceops-token-server"}
+
+
+@app.post("/api/ingest")
+async def ingest_file(file: UploadFile = File(...)):
+    """Upload a file to the runbooks directory and trigger ingestion."""
+    import asyncio
+    
+    runbooks_dir = os.path.join(root_dir, "runbooks")
+    os.makedirs(runbooks_dir, exist_ok=True)
+    
+    file_path = os.path.join(runbooks_dir, file.filename)
+    with open(file_path, "wb") as buffer:
+        shutil.copyfileobj(file.file, buffer)
+        
+    try:
+        # Run in thread to not block FastAPI event loop
+        await asyncio.to_thread(ingest.ingest, file.filename)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Ingestion failed: {str(e)}")
+        
+    return {"status": "success", "filename": file.filename}
 
 
 # ── Serve frontend static files ─────────────────────────────────────

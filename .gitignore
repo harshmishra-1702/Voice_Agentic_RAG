@@ -34,3 +34,7 @@ Thumbs.db
 
 # Logs
 *.log
+
+# Uploaded documents
+runbooks/*
+!runbooks/.gitkeep

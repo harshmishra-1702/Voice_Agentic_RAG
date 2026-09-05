@@ -68,27 +68,34 @@ async function handleFiles(files) {
   // Show progress UI
   uploadProgressContainer.classList.remove('hidden');
   uploadProgressBar.style.width = '10%';
-  progressText.textContent = '10%';
+  progressText.textContent = 'Uploading...';
 
-  // Simulate upload & parsing delay for the hackathon UI
-  for (let i = 20; i <= 90; i += 20) {
-    await new Promise(r => setTimeout(r, 150));
-    uploadProgressBar.style.width = `${i}%`;
-    progressText.textContent = `${i}%`;
+  for (let i = 0; i < files.length; i++) {
+     const file = files[i];
+     const formData = new FormData();
+     formData.append("file", file);
+     
+     try {
+         const response = await fetch('/api/ingest', {
+             method: 'POST',
+             body: formData
+         });
+         if (!response.ok) throw new Error("Upload failed");
+         
+         addDocumentPill(file.name);
+     } catch(err) {
+         console.error(err);
+         alert("Failed to upload " + file.name);
+     }
   }
 
-  // After simulated or real fetch to /api/ingest
-  Array.from(files).forEach(file => {
-    addDocumentPill(file.name);
-  });
-
   uploadProgressBar.style.width = '100%';
-  progressText.textContent = '100%';
+  progressText.textContent = 'Done!';
   
   setTimeout(() => {
     uploadProgressContainer.classList.add('hidden');
     uploadProgressBar.style.width = '0%';
-  }, 500);
+  }, 1500);
 }
 
 function addDocumentPill(filename) {
@@ -190,8 +197,10 @@ function setupRoomListeners(room) {
   
   room.on(LivekitClient.RoomEvent.TranscriptionReceived, (transcriptions, participant) => {
     for (const t of transcriptions) {
-      if (t.isFinal) {
-        appendTranscript(participant === room.localParticipant ? 'user' : 'agent', t.text);
+      const isFinal = t.isFinal || t.final;
+      if (isFinal && t.text && t.text.trim().length > 0) {
+        const isUser = participant?.identity === room.localParticipant?.identity;
+        appendTranscript(isUser ? 'user' : 'agent', t.text.trim());
       }
     }
   });
@@ -230,7 +239,7 @@ function setupRoomListeners(room) {
 function handleStatusEvent(evt) {
   const kind = evt.event;
   if (kind === 'tool_start') {
-    const label = evt.tool === 'query_runbook_rag' ? 'Searching runbooks (Latency Injected)...' : `Checking ${evt.host || evt.tool}...`;
+    const label = evt.tool === 'query_runbook_rag' ? 'Searching documents (Latency Injected)...' : `Checking ${evt.host || evt.tool}...`;
     showStatus(label, true, '#FF6A00');
   } else if (kind === 'tool_complete') {
     showStatus('Done', false, '#10B981');

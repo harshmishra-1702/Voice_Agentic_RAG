@@ -28,8 +28,8 @@ logger = logging.getLogger("voiceops.agent")
 
 # Filler phrases — rotated to avoid sounding canned on camera
 RAG_FILLERS = [
-    "Scanning the outage runbooks now\u2026",
-    "Searching through the incident procedures\u2026",
+    "Searching the uploaded documents now\u2026",
+    "Looking through the indexed files\u2026",
     "Pulling up the relevant documentation\u2026",
 ]
 
@@ -53,11 +53,9 @@ class VoiceOpsAgent(Agent):
     def __init__(self, turn_fence: TurnFenceManager) -> None:
         super().__init__(
             instructions=(
-                "You are VoiceOps, a concise SRE runbook copilot. "
-                "The user is a Site Reliability Engineer with both hands busy "
-                "inside a server rack — they can only interact by voice. "
-                "Keep spoken answers to 1-2 sentences. Summarize key steps "
-                "from runbooks rather than reading them verbatim. "
+                "You are VoiceOps, a concise voice assistant. "
+                "Keep spoken answers to 1-2 sentences. Do not use the document search tool "
+                "unless the user explicitly asks you to search for information in uploaded documents. "
                 "When checking server status, report the essentials: host, "
                 "status, and any concerning metrics. "
                 "If a tool fails, say so explicitly — never go silent."
@@ -81,7 +79,7 @@ class VoiceOpsAgent(Agent):
             except Exception:
                 logger.debug("Failed to send UI event", exc_info=True)
 
-    @function_tool(description="Search the SRE runbooks for procedures, recovery steps, or troubleshooting guides.")
+    @function_tool(description="Search the uploaded documents for procedures, steps, or guides.")
     async def query_runbook_rag(self, query: str) -> str:
         session = self.session
         dispatch_turn = self.turn_fence.current_turn_id
@@ -142,12 +140,13 @@ class VoiceOpsAgent(Agent):
 
             # Format results for the LLM to summarize
             formatted = "\n\n".join(
-                f"[Source: {r.source}] (relevance: {r.score:.2f})\n{r.text}"
+                f"[Source Document: {r.source}] (relevance: {r.score:.2f})\n{r.text}"
                 for r in results
             )
             return (
-                f"Found {len(results)} relevant runbook sections:\n\n{formatted}\n\n"
-                "Summarize the key recovery steps in 1-2 sentences for the user."
+                f"Found {len(results)} relevant document sections:\n\n{formatted}\n\n"
+                "Carefully answer the user's question using the information above. "
+                "Make sure to explicitly cite the source document name in your answer."
             )
 
         except asyncio.CancelledError:

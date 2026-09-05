@@ -16,6 +16,9 @@ from __future__ import annotations
 import os
 import sys
 
+# Force HuggingFace offline to completely eliminate the 30-40s network latency
+os.environ["HF_HUB_OFFLINE"] = "1"
+
 import chromadb
 from chromadb.utils.embedding_functions import SentenceTransformerEmbeddingFunction
 
@@ -48,28 +51,45 @@ def chunk_text(text: str, chunk_size: int = CHUNK_SIZE_WORDS, overlap: int = OVE
     return chunks
 
 
-def load_runbooks() -> list[tuple[str, str, str]]:
-    """Load all markdown files and chunk them.
-
-    Returns list of (chunk_id, chunk_text, source_filename).
-    """
+def load_runbooks(target_filename: str = None) -> list[tuple[str, str, str]]:
+    """Load files and chunk them. Supports .md, .txt, .pdf."""
     all_chunks: list[tuple[str, str, str]] = []
     chunk_counter = 0
 
     if not os.path.isdir(RUNBOOKS_DIR):
-        print(f"Error: runbooks directory not found at {RUNBOOKS_DIR}")
+        print(f"Error: directory not found at {RUNBOOKS_DIR}")
         sys.exit(1)
 
-    md_files = sorted(f for f in os.listdir(RUNBOOKS_DIR) if f.endswith(".md"))
+    if target_filename:
+        files = [target_filename]
+    else:
+        valid_exts = (".md", ".txt", ".pdf")
+        files = sorted(f for f in os.listdir(RUNBOOKS_DIR) if f.lower().endswith(valid_exts))
 
-    if not md_files:
-        print(f"Error: no .md files found in {RUNBOOKS_DIR}")
+    if not files:
+        print(f"Error: no valid files (.md, .txt, .pdf) found in {RUNBOOKS_DIR}")
         sys.exit(1)
 
-    for filename in md_files:
+    for filename in files:
         filepath = os.path.join(RUNBOOKS_DIR, filename)
-        with open(filepath, "r", encoding="utf-8") as f:
-            content = f.read()
+        content = ""
+        
+        try:
+            if filename.lower().endswith(".pdf"):
+                import pypdf
+                reader = pypdf.PdfReader(filepath)
+                text_pages = [page.extract_text() for page in reader.pages if page.extract_text()]
+                content = "\n".join(text_pages)
+            else:
+                with open(filepath, "r", encoding="utf-8") as f:
+                    content = f.read()
+        except Exception as e:
+            print(f"Error reading {filename}: {e}")
+            continue
+
+        if not content.strip():
+            print(f"  {filename}: empty or unreadable")
+            continue
 
         chunks = chunk_text(content)
         for chunk in chunks:
@@ -79,10 +99,29 @@ def load_runbooks() -> list[tuple[str, str, str]]:
 
         print(f"  {filename}: {len(chunks)} chunk(s)")
 
+    if not all_chunks:
+        print("Error: No content could be extracted from files.")
+        sys.exit(1)
+
     return all_chunks
 
 
-def ingest() -> None:
+_cached_client = None
+_cached_embedding_fn = None
+
+def get_collection():
+    global _cached_client, _cached_embedding_fn
+    if _cached_client is None:
+        _cached_client = chromadb.PersistentClient(path=CHROMA_PATH)
+    if _cached_embedding_fn is None:
+        _cached_embedding_fn = SentenceTransformerEmbeddingFunction(model_name=EMBEDDING_MODEL)
+    return _cached_client.get_or_create_collection(
+        name=COLLECTION_NAME,
+        embedding_function=_cached_embedding_fn,
+        metadata={"hnsw:space": "cosine"},
+    )
+
+def ingest(target_filename: str = None) -> None:
     """Main ingestion pipeline."""
     print(f"\n{'='*50}")
     print("VoiceOps — Runbook Ingestion")
@@ -90,31 +129,12 @@ def ingest() -> None:
 
     # Load and chunk
     print(f"Loading runbooks from: {RUNBOOKS_DIR}")
-    chunks = load_runbooks()
+    chunks = load_runbooks(target_filename)
     print(f"\nTotal chunks: {len(chunks)}")
 
     # Initialize ChromaDB with local embeddings
     print(f"\nInitializing ChromaDB at: {CHROMA_PATH}")
-    print(f"Embedding model: {EMBEDDING_MODEL} (local, no API key needed)")
-    print("(First run will download the model — ~80MB)")
-
-    client = chromadb.PersistentClient(path=CHROMA_PATH)
-    embedding_fn = SentenceTransformerEmbeddingFunction(
-        model_name=EMBEDDING_MODEL,
-    )
-
-    # Delete existing collection if present (clean re-ingest)
-    try:
-        client.delete_collection(COLLECTION_NAME)
-        print(f"Deleted existing collection '{COLLECTION_NAME}'")
-    except Exception:
-        pass
-
-    collection = client.create_collection(
-        name=COLLECTION_NAME,
-        embedding_function=embedding_fn,
-        metadata={"hnsw:space": "cosine"},
-    )
+    collection = get_collection()
 
     # Upsert chunks
     ids = [c[0] for c in chunks]
@@ -122,7 +142,7 @@ def ingest() -> None:
     metadatas = [{"source": c[2]} for c in chunks]
 
     print(f"\nEmbedding and upserting {len(chunks)} chunks...")
-    collection.add(
+    collection.upsert(
         ids=ids,
         documents=documents,
         metadatas=metadatas,
@@ -153,4 +173,5 @@ def ingest() -> None:
 
 
 if __name__ == "__main__":
-    ingest()
+    target = sys.argv[1] if len(sys.argv) > 1 else None
+    ingest(target)
