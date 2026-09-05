@@ -2,7 +2,7 @@
 
 A voice-first SRE copilot that lets engineers query runbooks and check server status entirely by voice, with hands-free interruption recovery and conversation continuity during tool work.
 
-Built for the **DataForge × Pathway × Rime Hackathon**.
+
 
 ## Problem
 

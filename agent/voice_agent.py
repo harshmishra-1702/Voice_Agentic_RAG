@@ -81,14 +81,9 @@ class VoiceOpsAgent(Agent):
             except Exception:
                 logger.debug("Failed to send UI event", exc_info=True)
 
-    @function_tool()
-    async def query_runbook_rag(self, ctx: RunContext, query: str) -> str:
-        """Search the SRE runbooks for procedures, recovery steps, or troubleshooting guides.
-
-        Args:
-            query: The search query describing what the user needs help with.
-        """
-        session = ctx.session
+    @function_tool(description="Search the SRE runbooks for procedures, recovery steps, or troubleshooting guides.")
+    async def query_runbook_rag(self, query: str) -> str:
+        session = self.session
         dispatch_turn = self.turn_fence.current_turn_id
 
         # Fire filler phrase concurrently — do NOT await before starting the search

@@ -63,7 +63,7 @@ async def entrypoint(ctx: JobContext) -> None:
             smart_format=True,
         ),
         llm=openai.LLM(
-            model="llama-3.3-70b-versatile",
+            model="openai/gpt-oss-20b",
             base_url="https://api.groq.com/openai/v1",
             api_key=groq_api_key,
             temperature=0.6,
