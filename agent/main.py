@@ -132,8 +132,7 @@ async def entrypoint(ctx: JobContext) -> None:
 
     # ── Initial greeting ────────────────────────────────────────────
     await session.say(
-        "VoiceOps online. I can search the runbooks or check server status. "
-        "What do you need?",
+        "VoiceOps online. What do you need?",
         allow_interruptions=True,
     )
     logger.info("Session started — VoiceOps agent is live")
