@@ -1,0 +1,13 @@
+{
+  "passed": false,
+  "filler_detected": false,
+  "stale_discarded": false,
+  "new_tool_completed": false,
+  "discard_event": null,
+  "completion_event": null,
+  "timing": {},
+  "errors": [
+    "Token server unhealthy: 401"
+  ],
+  "event_count": 0
+}

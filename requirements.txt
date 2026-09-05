@@ -1,0 +1,21 @@
+# Core framework
+livekit-agents>=1.0
+livekit-api>=1.0
+
+# LiveKit plugins
+livekit-plugins-deepgram>=1.0
+livekit-plugins-openai>=1.0
+livekit-plugins-rime>=1.0
+livekit-plugins-silero>=1.0
+
+# RAG
+chromadb>=0.5.0
+sentence-transformers>=3.0.0
+
+# Backend server
+fastapi>=0.111.0
+uvicorn[standard]>=0.30.0
+
+# Utilities
+python-dotenv>=1.0.0
+httpx>=0.27.0

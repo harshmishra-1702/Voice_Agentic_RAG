@@ -1,0 +1,53 @@
+# .cursorrules — VoiceOps
+
+## Stack — do not substitute without explicit instruction
+- Python, `livekit-agents` for orchestration. Do not propose Node.js/other
+  frameworks.
+- TTS is Rime via `livekit-plugins-rime` ONLY. Never suggest swapping to
+  another TTS provider "for simplicity" — Rime must remain the primary
+  spoken output per hackathon eligibility rules.
+- Always construct the Rime TTS plugin with `use_websocket=True`. Never
+  remove or default this to False — word-level timestamps depend on it.
+- Model: `coda`. Speaker: `astra` unless a documented, verified alternative
+  is confirmed present in Rime's live catalog for the `coda` model first.
+  Never hardcode a speaker name without that verification step.
+- LLM: function-calling model via a livekit-agents plugin (openai/anthropic/
+  groq). Any tool-routing change must be smoke-tested before being treated
+  as done.
+- Vector store: ChromaDB, local persisted. Don't introduce a hosted vector
+  DB — unnecessary complexity for this scope.
+
+## Non-negotiable behavioral requirements
+- Every tool dispatch must be tagged with the `turn_id` active at dispatch
+  time. Every point where a tool result is about to be spoken must re-check
+  that tag against the current `turn_id` before speaking. Do not "simplify"
+  this by removing the re-check at speak-time — that reintroduces the race
+  condition this whole project exists to solve.
+- Filler phrases must use `add_to_chat_ctx=False` and must not be awaited
+  before the tool task starts — they need to run concurrently, not
+  sequentially.
+- Never let a stale tool result enter the LLM's chat context, even if it
+  would "look fine" in that turn.
+- Spoken responses stay short (1–2 sentences). Longer detail goes to the
+  on-screen transcript only.
+
+## Credential hygiene
+- No API keys in code, comments, logs, README, screenshots, or committed
+  files — server-side env vars only.
+- `.env.example` ships with placeholders only.
+- Before any commit, grep the diff for anything that looks like a key
+  pattern before assuming it's clean.
+
+## Code style
+- Type hints on all function signatures.
+- Async/await throughout the agent worker — no blocking sync calls inside
+  the event loop (this breaks interruption timing).
+- Keep tool functions small and single-purpose; the fencing/cancellation
+  logic lives in one clearly named module, not scattered across handlers.
+
+## When editing evidence/docs
+- `RIME_EVIDENCE.md` must stay in sync with the actual acceptance test in
+  code. If the test changes, update the doc in the same change — don't let
+  them drift.
+- Don't add features not covered by `PRD.md`'s in-scope list without
+  flagging the scope change explicitly.

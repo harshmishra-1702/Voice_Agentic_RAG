@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>VoiceOps - SRE Copilot</title>
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono&family=IBM+Plex+Sans:wght@400;500&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
+  
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header>
+    <h1>VoiceOps</h1>
+    <div class="provider-badge">
+      <span id="connection-dot" class="dot disconnected"></span>
+      Rime — coda / astra
+    </div>
+  </header>
+
+  <main id="app-main">
+    <section id="waveform-section">
+      <canvas id="waveform-canvas"></canvas>
+    </section>
+
+    <section id="status-section">
+      <div id="status-pill" class="hidden">Listening...</div>
+    </section>
+
+    <hr class="section-divider">
+
+    <section id="transcript-section">
+      <div id="transcript-container"></div>
+    </section>
+  </main>
+
+  <div id="connect-overlay">
+    <div class="overlay-content">
+      <h2>VoiceOps SRE Copilot</h2>
+      <p id="error-message" class="error hidden"></p>
+      <button id="connect-btn">Connect</button>
+    </div>
+  </div>
+
+  <audio id="agent-audio" autoplay></audio>
+  
+  <script src="https://cdn.jsdelivr.net/npm/livekit-client/dist/livekit-client.umd.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
