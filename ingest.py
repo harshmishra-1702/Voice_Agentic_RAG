@@ -22,86 +22,51 @@ os.environ["HF_HUB_OFFLINE"] = "1"
 import chromadb
 from chromadb.utils.embedding_functions import SentenceTransformerEmbeddingFunction
 
-RUNBOOKS_DIR = os.path.join(os.path.dirname(__file__), "runbooks")
+KNOWLEDGE_DIR = os.path.join(os.path.dirname(__file__), "knowledge")
 CHROMA_PATH = os.path.join(os.path.dirname(__file__), "chroma_db")
-COLLECTION_NAME = "sre_runbooks"
+COLLECTION_NAME = "memorylab_knowledge"
 EMBEDDING_MODEL = "all-MiniLM-L6-v2"
 
 # Chunking parameters
 CHUNK_SIZE_WORDS = 300
 OVERLAP_WORDS = 50
 
-
-def chunk_text(text: str, chunk_size: int = CHUNK_SIZE_WORDS, overlap: int = OVERLAP_WORDS) -> list[str]:
-    """Split text into overlapping word-based chunks."""
-    words = text.split()
-    chunks: list[str] = []
-
-    if len(words) <= chunk_size:
-        return [text.strip()] if text.strip() else []
-
-    start = 0
-    while start < len(words):
-        end = start + chunk_size
-        chunk = " ".join(words[start:end])
-        if chunk.strip():
-            chunks.append(chunk.strip())
-        start += chunk_size - overlap
-
-    return chunks
-
-
-def load_runbooks(target_filename: str = None) -> list[tuple[str, str, str]]:
-    """Load files and chunk them. Supports .md, .txt, .pdf."""
-    all_chunks: list[tuple[str, str, str]] = []
+def load_knowledge() -> list[dict]:
+    import json
+    import glob
+    
+    all_chunks = []
     chunk_counter = 0
 
-    if not os.path.isdir(RUNBOOKS_DIR):
-        print(f"Error: directory not found at {RUNBOOKS_DIR}")
-        sys.exit(1)
+    if not os.path.isdir(KNOWLEDGE_DIR):
+        print(f"Error: directory not found at {KNOWLEDGE_DIR}")
+        return all_chunks
 
-    if target_filename:
-        files = [target_filename]
-    else:
-        valid_exts = (".md", ".txt", ".pdf")
-        files = sorted(f for f in os.listdir(RUNBOOKS_DIR) if f.lower().endswith(valid_exts))
-
-    if not files:
-        print(f"Error: no valid files (.md, .txt, .pdf) found in {RUNBOOKS_DIR}")
-        sys.exit(1)
-
-    for filename in files:
-        filepath = os.path.join(RUNBOOKS_DIR, filename)
-        content = ""
-        
+    json_files = glob.glob(os.path.join(KNOWLEDGE_DIR, "**", "*.json"), recursive=True)
+    for filepath in json_files:
         try:
-            if filename.lower().endswith(".pdf"):
-                import pypdf
-                reader = pypdf.PdfReader(filepath)
-                text_pages = [page.extract_text() for page in reader.pages if page.extract_text()]
-                content = "\n".join(text_pages)
-            else:
-                with open(filepath, "r", encoding="utf-8") as f:
-                    content = f.read()
+            with open(filepath, "r", encoding="utf-8") as f:
+                data = json.load(f)
+                for item in data:
+                    chunk_id = f"{item['document_id']}::chunk-{chunk_counter}"
+                    item['chunk_id'] = chunk_id
+                    
+                    # Store original text for chunking or just use the text as a whole chunk
+                    text = item.get("text", "")
+                    if text:
+                        all_chunks.append({
+                            "id": chunk_id,
+                            "text": text,
+                            "metadata": {
+                                "source_title": item.get("source_title", "Unknown"),
+                                "concept": item.get("concept", "unknown"),
+                                "evidence_level": item.get("evidence_level", "unknown"),
+                                "system": item.get("system", "Unknown"),
+                            }
+                        })
+                        chunk_counter += 1
         except Exception as e:
-            print(f"Error reading {filename}: {e}")
-            continue
-
-        if not content.strip():
-            print(f"  {filename}: empty or unreadable")
-            continue
-
-        chunks = chunk_text(content)
-        for chunk in chunks:
-            chunk_id = f"{filename}::chunk-{chunk_counter}"
-            all_chunks.append((chunk_id, chunk, filename))
-            chunk_counter += 1
-
-        print(f"  {filename}: {len(chunks)} chunk(s)")
-
-    if not all_chunks:
-        print("Error: No content could be extracted from files.")
-        sys.exit(1)
+            print(f"Error reading {filepath}: {e}")
 
     return all_chunks
 
@@ -124,22 +89,26 @@ def get_collection():
 def ingest(target_filename: str = None) -> None:
     """Main ingestion pipeline."""
     print(f"\n{'='*50}")
-    print("VoiceOps — Runbook Ingestion")
+    print("MemoryLab — Knowledge Ingestion")
     print(f"{'='*50}\n")
 
     # Load and chunk
-    print(f"Loading runbooks from: {RUNBOOKS_DIR}")
-    chunks = load_runbooks(target_filename)
+    print(f"Loading knowledge from: {KNOWLEDGE_DIR}")
+    chunks = load_knowledge()
     print(f"\nTotal chunks: {len(chunks)}")
+
+    if not chunks:
+        print("No chunks to ingest.")
+        return
 
     # Initialize ChromaDB with local embeddings
     print(f"\nInitializing ChromaDB at: {CHROMA_PATH}")
     collection = get_collection()
 
     # Upsert chunks
-    ids = [c[0] for c in chunks]
-    documents = [c[1] for c in chunks]
-    metadatas = [{"source": c[2]} for c in chunks]
+    ids = [c["id"] for c in chunks]
+    documents = [c["text"] for c in chunks]
+    metadatas = [c["metadata"] for c in chunks]
 
     print(f"\nEmbedding and upserting {len(chunks)} chunks...")
     collection.upsert(
@@ -155,17 +124,18 @@ def ingest(target_filename: str = None) -> None:
 
     # Quick verification search
     print(f"\n{'='*50}")
-    print("Verification search: 'switch failure recovery'")
+    print("Verification search: 'recurrent memory'")
     print(f"{'='*50}")
     results = collection.query(
-        query_texts=["switch failure outage recovery steps"],
+        query_texts=["recurrent memory"],
         n_results=2,
     )
-    for i, (doc, meta) in enumerate(
-        zip(results["documents"][0], results["metadatas"][0])  # type: ignore[index]
-    ):
-        print(f"\n  Result {i+1} (source: {meta['source']}):")
-        print(f"  {doc[:150]}...")
+    if results and results.get("documents") and results["documents"][0]:
+        for i, (doc, meta) in enumerate(
+            zip(results["documents"][0], results["metadatas"][0])  # type: ignore[index]
+        ):
+            print(f"\n  Result {i+1} (source: {meta['source_title']}):")
+            print(f"  {doc[:150]}...")
 
     print(f"\n{'='*50}")
     print("Done! Run the agent with: python -m agent.main dev")

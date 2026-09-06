@@ -67,6 +67,26 @@ class TokenResponse(BaseModel):
     room_name: str
 
 
+class ExperimentRequest(BaseModel):
+    sequence: list[str]
+    memory_size: int = 8
+    update_strength: float = 0.6
+    interference: float = 0.1
+    seed: int = 42
+    retrieval_targets: list[str] | None = None
+
+@app.post("/api/v1/experiment/memory/run")
+async def run_memory_experiment_api(req: ExperimentRequest):
+    from agent.education.experiment_engine import run_experiment
+    return run_experiment(
+        sequence=req.sequence,
+        memory_size=req.memory_size,
+        update_strength=req.update_strength,
+        interference=req.interference,
+        seed=req.seed,
+        retrieval_targets=req.retrieval_targets
+    )
+
 @app.post("/api/token", response_model=TokenResponse)
 async def generate_token(req: TokenRequest) -> TokenResponse:
     """Mint a short-lived, scoped LiveKit join token.

@@ -17,7 +17,7 @@ from chromadb.utils.embedding_functions import SentenceTransformerEmbeddingFunct
 
 logger = logging.getLogger("voiceops.rag")
 
-COLLECTION_NAME = "sre_runbooks"
+COLLECTION_NAME = "memorylab_knowledge"
 CHROMA_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), "chroma_db")
 EMBEDDING_MODEL = "all-MiniLM-L6-v2"  # ~80MB, fast, good for small corpora
 
@@ -27,13 +27,17 @@ class SearchResult:
     """A single RAG search result with source attribution."""
 
     text: str
-    source: str
+    source_title: str
+    concept: str
+    evidence_level: str
     score: float
 
     def to_dict(self) -> dict[str, Any]:
         return {
             "text": self.text,
-            "source": self.source,
+            "source_title": self.source_title,
+            "concept": self.concept,
+            "evidence_level": self.evidence_level,
             "score": round(self.score, 4),
         }
 
@@ -59,8 +63,8 @@ def get_collection() -> chromadb.Collection:
     )
 
 
-async def search_runbooks(query: str, top_k: int = 3) -> list[SearchResult]:
-    """Semantic search over the runbook corpus.
+async def search_knowledge(query: str, top_k: int = 3) -> list[SearchResult]:
+    """Semantic search over the knowledge corpus.
 
     Returns the top-k most relevant chunks with source file attribution.
     ChromaDB's query is synchronous, so we run it in a thread executor
@@ -89,7 +93,9 @@ async def search_runbooks(query: str, top_k: int = 3) -> list[SearchResult]:
         search_results.append(
             SearchResult(
                 text=doc,
-                source=meta.get("source", "unknown"),
+                source_title=meta.get("source_title", "Unknown"),
+                concept=meta.get("concept", "unknown"),
+                evidence_level=meta.get("evidence_level", "unknown"),
                 score=1.0 - dist,  # cosine distance → similarity
             )
         )

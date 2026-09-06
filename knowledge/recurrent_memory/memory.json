@@ -1,0 +1,16 @@
+[
+  {
+    "document_id": "doc-001",
+    "source_title": "Understanding Recurrent Memory Models",
+    "authors": ["Dr. Memory"],
+    "year": 2026,
+    "source_type": "primary_paper",
+    "system": "BDH",
+    "concept": "recurrent_memory",
+    "url": "https://example.com/bdh-paper",
+    "license": "MIT",
+    "evidence_level": "primary",
+    "section": "Abstract",
+    "text": "A fixed-size recurrent state can process sequences of unbounded duration without allocating a new memory slot for every token, but limited state capacity and interference can make earlier information less recoverable. The state continues to update and overwrite information based on its fixed capacity."
+  }
+]
