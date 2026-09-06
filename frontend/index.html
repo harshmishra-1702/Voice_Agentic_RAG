@@ -3,116 +3,443 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>VoiceOps - SRE Copilot</title>
+  <title>VoiceOps — Autonomous Voice-Native SRE Copilot</title>
   
+  <!-- Fonts: Space Grotesk (Headings), JetBrains Mono (Telemetry/Code), Inter (Readability) -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:ital,wght@0,300;0,400;0,500;0,700;1,400&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
   
   <link rel="stylesheet" href="styles.css">
 </head>
-<body>
-  <header>
-    <div class="header-left">
-      <div class="logo-icon">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>
+<body class="cyber-theme">
+  <!-- Interactive 60fps Neural Particle Constellation Background Canvas -->
+  <canvas id="bg-canvas"></canvas>
+  
+  <!-- Subtle CRT / Cyber HUD Scanline Overlay -->
+  <div class="cyber-scanlines" aria-hidden="true"></div>
+  <div class="ambient-glow glow-top-left" aria-hidden="true"></div>
+  <div class="ambient-glow glow-bottom-right" aria-hidden="true"></div>
+
+  <!-- Top Cyber Command Navigation -->
+  <header class="hud-header glass-panel">
+    <div class="header-branding">
+      <div class="hud-logo-wrapper">
+        <div class="hud-logo-icon">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+          </svg>
+        </div>
+        <div class="logo-pulse-ring"></div>
       </div>
-      <div>
-        <h1>VoiceOps</h1>
-        <p class="subtitle">SRE Copilot & Agentic RAG</p>
+      <div class="hud-title-group">
+        <div class="hud-title-row">
+          <h1 class="glitch-text" data-text="VOICEOPS">VOICEOPS</h1>
+          <span class="hud-tag-skewed">SRE QUANTUM HUD</span>
+        </div>
+        <p class="hud-subtitle">VOICE-NATIVE AGENTIC RAG • TURN FENCING • MULTI-TOOL COGNITION</p>
       </div>
     </div>
-    <div class="provider-badge">
-      <span id="connection-dot" class="dot disconnected"></span>
-      <span>Rime — coda / astra</span>
+
+    <!-- Center System Telemetry Badges -->
+    <div class="header-telemetry">
+      <div class="telemetry-badge">
+        <span class="badge-label">TURN FENCE</span>
+        <span id="header-turn-counter" class="badge-value text-accent">TURN #0</span>
+      </div>
+      <div class="telemetry-badge">
+        <span class="badge-label">VECTOR INDEX</span>
+        <span id="header-vector-stats" class="badge-value text-cyan">3 CHUNKS</span>
+      </div>
+      <div class="telemetry-badge">
+        <span class="badge-label">AI ENGINE</span>
+        <span class="badge-value text-emerald">GROQ 70B // RIME TTS</span>
+      </div>
+    </div>
+
+    <!-- Header Actions & Connection Indicators -->
+    <div class="header-controls">
+      <!-- Cyber SFX Audio Toggle -->
+      <button id="sfx-toggle-btn" class="hud-icon-btn" title="Toggle Procedural Cyber Audio Effects">
+        <svg id="sfx-icon-on" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+          <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+        </svg>
+        <svg id="sfx-icon-off" class="hidden" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+          <line x1="23" y1="9" x2="17" y2="15"></line>
+          <line x1="17" y1="9" x2="23" y2="15"></line>
+        </svg>
+        <span class="btn-tooltip">SFX ON</span>
+      </button>
+
+      <!-- Provider Status Pill -->
+      <div class="provider-pill">
+        <span id="connection-dot" class="status-dot dot-offline"></span>
+        <span id="connection-status-text" class="status-text">OFFLINE</span>
+      </div>
+
+      <!-- Quick Session Action Button -->
+      <button id="header-connect-btn" class="hud-btn-neo-accent">
+        <span class="btn-skew-content">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M5 12h14M12 5l7 7-7 7"></path>
+          </svg>
+          <span id="header-connect-text">CONNECT</span>
+        </span>
+      </button>
     </div>
   </header>
 
-  <main id="app-main">
-    <!-- Left Column: Knowledge & Telemetry -->
-    <div class="panel-left">
-      <!-- Drag & Drop Ingestion -->
-      <section class="card">
-        <div class="card-header">
-          <h2>Dynamic Knowledge Ingestion</h2>
-          <p>Drop PDF, PPTX, or DOCX files to automatically index into ChromaDB.</p>
-        </div>
+  <!-- Main Cyber Operations Console -->
+  <main id="app-main" class="hud-main-grid">
+    <!-- LEFT PANEL: Ingestion & Telemetry Station -->
+    <aside class="panel-left">
+      <!-- Section 1: Dynamic Knowledge Ingestion -->
+      <section class="card neo-card glass-panel" data-tilt>
+        <div class="card-corner-bracket top-left"></div>
+        <div class="card-corner-bracket top-right"></div>
         
-        <div id="dropzone" class="dropzone">
-          <input type="file" id="file-input" multiple accept=".pdf,.pptx,.docx,.txt">
-          <svg class="upload-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
-          <p>Drop runbooks here, or <span>browse</span></p>
+        <div class="card-header-skew">
+          <div class="skew-badge">// 01 INGESTION ENGINE</div>
+          <div class="card-title-wrap">
+            <h2>DYNAMIC RUNBOOK INGESTION</h2>
+            <p>Hot-load SRE playbooks & policies directly into ChromaDB vector space.</p>
+          </div>
+        </div>
+
+        <div id="dropzone" class="cyber-dropzone">
+          <input type="file" id="file-input" multiple accept=".pdf,.pptx,.docx,.txt,.md">
+          <div class="dropzone-laser-scan" aria-hidden="true"></div>
           
-          <div id="upload-progress-container" class="progress-container hidden">
-            <div class="progress-header">
-              <span>Parsing Document Chunks...</span>
-              <span id="progress-text">0%</span>
+          <div class="dropzone-body">
+            <div class="dropzone-icon-box">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                <polyline points="17 8 12 3 7 8"></polyline>
+                <line x1="12" y1="3" x2="12" y2="15"></line>
+              </svg>
             </div>
-            <div class="progress-bar-bg">
-              <div id="upload-progress-bar" class="progress-bar-fill"></div>
+            <div class="dropzone-text">
+              <p class="dropzone-main-text">DRAG & DROP SRE RUNBOOKS</p>
+              <p class="dropzone-sub-text">or <span class="highlight-browse">browse local drive</span></p>
+            </div>
+            <div class="file-format-tags">
+              <span class="fmt-tag">PDF</span>
+              <span class="fmt-tag">MD</span>
+              <span class="fmt-tag">TXT</span>
+              <span class="fmt-tag">DOCX</span>
+            </div>
+          </div>
+
+          <!-- Dynamic Ingestion Progress Overlay -->
+          <div id="upload-progress-container" class="upload-progress-glass hidden">
+            <div class="progress-meta-row">
+              <span class="progress-title"><span class="pulse-sparkle">●</span> EMBEDDING CHUNKS (all-MiniLM-L6-v2)</span>
+              <span id="progress-text" class="progress-percentage">0%</span>
+            </div>
+            <div class="progress-track">
+              <div id="upload-progress-bar" class="progress-fill"></div>
+              <div class="progress-glow-head"></div>
             </div>
           </div>
         </div>
 
-        <div class="indexed-files">
-          <span class="index-title"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="5" rx="9" ry="3"></ellipse><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"></path><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"></path></svg> Active Vector Index</span>
-          <div id="doc-pills-container" class="pills-container">
-            <!-- Dynamic pills go here -->
+        <!-- Section 2: Active Vector Knowledge Base -->
+        <div class="indexed-section">
+          <div class="indexed-header">
+            <span class="sec-label">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--accent-cyan)" stroke-width="2">
+                <ellipse cx="12" cy="5" rx="9" ry="3"></ellipse>
+                <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"></path>
+                <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"></path>
+              </svg>
+              ACTIVE VECTOR KNOWLEDGE REPOSITORY
+            </span>
+            <button id="refresh-docs-btn" class="mini-icon-btn" title="Refresh Vector Store List">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"></path>
+              </svg>
+            </button>
+          </div>
+
+          <div id="doc-pills-container" class="cyber-pills-scroll">
+            <!-- Dynamically populated from /api/documents -->
+            <div class="pills-loading-placeholder">
+              <span class="animate-pulse">Loading indexed documents...</span>
+            </div>
           </div>
         </div>
       </section>
 
-      <!-- Rime Telemetry & Waveform -->
-      <section class="card telemetry-card">
-        <div class="card-header">
-          <h2>Rime State Telemetry</h2>
-        </div>
-        
-        <div class="status-box">
-          <span class="status-label">Agent Status</span>
-          <div style="display: flex; gap: 1rem; align-items: center;">
-            <div id="status-pill" class="hidden">Idle</div>
-            <button id="start-listen-btn" class="action-btn hidden">Start Mic</button>
+      <!-- Section 3: SRE Cluster Telemetry Grid -->
+      <section class="card neo-card glass-panel telemetry-cluster-card" data-tilt>
+        <div class="card-corner-bracket top-left"></div>
+        <div class="card-corner-bracket top-right"></div>
+
+        <div class="card-header-skew">
+          <div class="skew-badge">// 02 SRE INFRA MATRIX</div>
+          <div class="card-title-wrap">
+            <h2>LIVE CLUSTER HEALTH NODES</h2>
+            <p>Monitored services queryable via voice agent check_server_status tool.</p>
           </div>
         </div>
 
-        <div class="waveform-wrapper">
-          <span class="status-label">Realtime Audio FFT</span>
-          <div id="waveform-section">
-            <canvas id="waveform-canvas"></canvas>
+        <div class="cluster-nodes-grid">
+          <div class="cluster-node-pill" data-host="prod-db-01">
+            <div class="node-status-led led-green"></div>
+            <div class="node-info">
+              <span class="node-name">prod-db-01</span>
+              <span class="node-metric">CPU: 23.4% • 14ms</span>
+            </div>
+            <span class="node-state-tag tag-healthy">ONLINE</span>
+          </div>
+
+          <div class="cluster-node-pill" data-host="auth-service-02">
+            <div class="node-status-led led-yellow"></div>
+            <div class="node-info">
+              <span class="node-name">auth-service-02</span>
+              <span class="node-metric">CPU: 87.1% • 92ms</span>
+            </div>
+            <span class="node-state-tag tag-degraded">DEGRADED</span>
+          </div>
+
+          <div class="cluster-node-pill" data-host="ingress-gateway">
+            <div class="node-status-led led-green"></div>
+            <div class="node-info">
+              <span class="node-name">ingress-gateway</span>
+              <span class="node-metric">CPU: 45.0% • 8ms</span>
+            </div>
+            <span class="node-state-tag tag-healthy">ONLINE</span>
+          </div>
+
+          <div class="cluster-node-pill" data-host="worker-pool-east">
+            <div class="node-status-led led-green"></div>
+            <div class="node-info">
+              <span class="node-name">worker-pool-east</span>
+              <span class="node-metric">CPU: 38.2% • 19ms</span>
+            </div>
+            <span class="node-state-tag tag-healthy">ONLINE</span>
           </div>
         </div>
       </section>
-    </div>
+    </aside>
 
-    <!-- Right Column: Voice Ops Transcript -->
-    <div class="panel-right card">
-      <div class="card-header border-bottom">
-        <h2><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#FF6A00" stroke-width="2"><polyline points="4 17 10 11 4 5"></polyline><line x1="12" y1="19" x2="20" y2="19"></line></svg> Voice Ops Event Stream</h2>
+    <!-- RIGHT PANEL: Voice Ops Mission Control -->
+    <section class="panel-right">
+      <!-- Section 1: Holographic Audio & State Telemetry -->
+      <div class="card neo-card glass-panel neural-telemetry-card">
+        <div class="card-corner-bracket top-left"></div>
+        <div class="card-corner-bracket top-right"></div>
+
+        <div class="telemetry-top-bar">
+          <div class="card-header-skew">
+            <div class="skew-badge">// 03 NEURAL AUDIO FFT</div>
+            <div class="card-title-wrap">
+              <h2>REALTIME VOICE TELEMETRY</h2>
+              <p>Rime coda/astra full-duplex stream with hardware-accelerated FFT rendering.</p>
+            </div>
+          </div>
+
+          <!-- Visualizer Mode Selector Buttons -->
+          <div class="viz-mode-switch">
+            <button id="viz-mode-spectrum" class="viz-mode-btn active" title="Quantum Frequency Spectrum">SPECTRUM</button>
+            <button id="viz-mode-radar" class="viz-mode-btn" title="Holographic Reactor Core">REACTOR</button>
+          </div>
+        </div>
+
+        <!-- Audio Visualizer Canvas Container -->
+        <div class="waveform-stage">
+          <canvas id="waveform-canvas"></canvas>
+
+          <!-- Holographic Center Radar Ring Overlay (Visible in Reactor Mode) -->
+          <div id="holographic-core-overlay" class="holographic-core-ring hidden">
+            <div class="reactor-center-glow"></div>
+            <div class="reactor-outer-ring"></div>
+            <div class="reactor-inner-ring"></div>
+            <div class="reactor-crosshair"></div>
+          </div>
+
+          <!-- Agent State Pill Floating in Visualizer Stage -->
+          <div class="floating-agent-badge">
+            <div class="agent-activity-indicator">
+              <span id="agent-state-dot" class="pulse-indicator-dot"></span>
+              <span id="status-pill" class="agent-state-label">INITIALIZING...</span>
+            </div>
+            <div id="agent-paused-badge" class="agent-paused-badge hidden">
+              <span class="paused-led"></span>
+              <span>VOICE PAUSED</span>
+            </div>
+            <div class="turn-chip" id="turn-display-chip">
+              <span class="turn-tag">FENCE ID:</span>
+              <span id="active-turn-val">TURN 0</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Mic & Agent Audio Control Bar -->
+        <div class="voice-controls-bar">
+          <div class="mic-action-group">
+            <button id="start-listen-btn" class="hud-btn-tactile-mic hidden">
+              <div class="mic-icon-wrapper">
+                <svg class="mic-svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
+                  <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+                  <line x1="12" y1="19" x2="12" y2="23"></line>
+                  <line x1="8" y1="23" x2="16" y2="23"></line>
+                </svg>
+                <div class="mic-ripple-ring"></div>
+              </div>
+              <span id="start-listen-text" class="mic-btn-label">START MIC</span>
+            </button>
+
+            <!-- Feature: Pause / Resume Agent Voice Output -->
+            <button id="pause-agent-btn" class="hud-btn-agent-pause" title="Pause or Resume Agent Voice Audio (Hotkey: P)">
+              <div class="pause-icon-wrapper">
+                <svg id="pause-icon-svg" class="pause-svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                  <rect x="6" y="4" width="4" height="16" rx="1"></rect>
+                  <rect x="14" y="4" width="4" height="16" rx="1"></rect>
+                </svg>
+                <svg id="play-icon-svg" class="pause-svg hidden" width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                  <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                </svg>
+              </div>
+              <span id="pause-agent-text" class="pause-btn-label">PAUSE AGENT VOICE</span>
+            </button>
+
+            <span class="mic-hint-text">[P] to pause voice • [Space] to mic</span>
+          </div>
+
+          <!-- Quick Audio Level Meter -->
+          <div class="audio-level-meter-wrap">
+            <span class="level-meter-label">INPUT DB</span>
+            <div class="level-meter-track">
+              <div id="level-meter-bar" class="level-meter-fill"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Quick Voice Prompt Chips (For Fast Testing & SRE Hands-Free Actions) -->
+        <div class="quick-prompts-tray">
+          <span class="tray-label">QUICK PROMPTS:</span>
+          <button class="prompt-chip" data-prompt="Check server status for prod-db-01">
+            <span class="prompt-icon">⚡</span>
+            <span>Check prod-db-01</span>
+          </button>
+          <button class="prompt-chip" data-prompt="Search runbooks for high latency incident recovery steps">
+            <span class="prompt-icon">🔍</span>
+            <span>Latency Runbook</span>
+          </button>
+          <button class="prompt-chip" data-prompt="Check server status for auth-service-02">
+            <span class="prompt-icon">⚡</span>
+            <span>Check auth-service-02</span>
+          </button>
+          <button class="prompt-chip prompt-chip-bargein" id="simulate-bargein-btn" title="Demonstrate Hard-Voice Turn Fencing Stale Discard">
+            <span class="prompt-icon">🛑</span>
+            <span>Simulate Barge-In</span>
+          </button>
+        </div>
       </div>
-      <section id="transcript-section">
-        <div id="transcript-container">
-          <div class="empty-state">Connect WebRTC session to initialize transcript...</div>
+
+      <!-- Section 2: Voice Ops Live Event Stream & Turn-Fenced Transcripts -->
+      <div class="card neo-card glass-panel event-stream-card">
+        <div class="card-corner-bracket top-left"></div>
+        <div class="card-corner-bracket top-right"></div>
+
+        <div class="card-header-skew border-bottom">
+          <div class="skew-badge">// 04 EVENT STREAM</div>
+          <div class="card-title-wrap">
+            <h2>VOICE OPS DUPLEX TRANSCRIPT & TURN FENCE</h2>
+            <p>Live synchronized transcription, tool dispatch, and barge-in discard events.</p>
+          </div>
+          <div class="stream-actions">
+            <button id="clear-transcript-btn" class="mini-hud-btn" title="Clear Event Log">CLEAR</button>
+          </div>
         </div>
-      </section>
-    </div>
+
+        <div id="transcript-section" class="cyber-scroll-container">
+          <div id="transcript-container" class="transcript-bubbles-flow">
+            <!-- Initialized with futuristic empty state -->
+            <div class="empty-state-cyber">
+              <div class="empty-state-radar">
+                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                  <circle cx="12" cy="12" r="10"></circle>
+                  <path d="M12 2a10 10 0 0 1 10 10"></path>
+                  <circle cx="12" cy="12" r="3"></circle>
+                </svg>
+              </div>
+              <p class="empty-title">AWAITING OPERATOR WEBRTC SESSION</p>
+              <p class="empty-desc">Click "CONNECT COCKPIT" to mint an ephemeral token and initiate real-time audio dispatch.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
   </main>
 
-  <!-- Connection Overlay -->
-  <div id="connect-overlay">
-    <div class="overlay-content">
-      <div class="sparkle-icon">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+  <!-- Connect Session Glassmorphic Modal Overlay -->
+  <div id="connect-overlay" class="cyber-modal-backdrop">
+    <div class="cyber-modal-card glass-panel-modal" data-tilt>
+      <div class="modal-corner-accent top-left"></div>
+      <div class="modal-corner-accent top-right"></div>
+      <div class="modal-corner-accent bottom-left"></div>
+      <div class="modal-corner-accent bottom-right"></div>
+
+      <div class="modal-cyber-glow"></div>
+      
+      <div class="modal-header">
+        <div class="modal-hologram-emblem">
+          <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="var(--accent-cyan)" stroke-width="2">
+            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+          </svg>
+        </div>
+        <div class="modal-skew-badge">SECURE WEBRTC GATEWAY</div>
+        <h2 class="modal-title">VOICEOPS SRE COPILOT</h2>
+        <p class="modal-desc">Full-duplex Agentic RAG powered by LiveKit WebRTC, Deepgram Nova-3, Groq Llama-3.3-70B, and Rime TTS.</p>
       </div>
-      <h2>VoiceOps SRE Copilot</h2>
-      <p class="overlay-desc">Full-duplex Agentic RAG powered by LiveKit WebRTC and Rime TTS.</p>
-      <p id="error-message" class="error hidden"></p>
-      <button id="connect-btn">Connect Operator Session</button>
+
+      <div class="modal-specs-grid">
+        <div class="spec-box">
+          <span class="spec-name">MEDIA ROUTING</span>
+          <span class="spec-val">LiveKit SFU</span>
+        </div>
+        <div class="spec-box">
+          <span class="spec-name">TTS STREAMING</span>
+          <span class="spec-val">Rime coda / astra</span>
+        </div>
+        <div class="spec-box">
+          <span class="spec-name">VECTOR RAG</span>
+          <span class="spec-val">ChromaDB Persistent</span>
+        </div>
+        <div class="spec-box">
+          <span class="spec-name">HARD-VOICE</span>
+          <span class="spec-val">Turn Fencing Monotonic</span>
+        </div>
+      </div>
+
+      <p id="error-message" class="error-banner hidden"></p>
+
+      <div class="modal-action-row">
+        <button id="connect-btn" class="hud-btn-neo-launch">
+          <span class="btn-inner-shine"></span>
+          <span class="btn-text">INITIALIZE OPERATOR SESSION</span>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+            <polyline points="12 5 19 12 12 19"></polyline>
+          </svg>
+        </button>
+      </div>
+
+      <div class="modal-footer-notes">
+        <span>* Ephemeral WebRTC tokens are minted securely server-side. No raw API keys touch browser storage.</span>
+      </div>
     </div>
   </div>
 
-  <audio id="agent-audio" autoplay></audio>
-  
+  <!-- Hidden WebRTC Audio Output Receiver -->
+  <audio id="agent-audio" autoplay playsinline></audio>
+
+  <!-- LiveKit Client Library (UMD) & Main Controller -->
   <script src="https://cdn.jsdelivr.net/npm/livekit-client/dist/livekit-client.umd.js"></script>
   <script src="app.js"></script>
 </body>

@@ -12,6 +12,8 @@ import json
 import os
 import uuid
 
+from typing import Any
+
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -141,6 +143,140 @@ async def ingest_file(file: UploadFile = File(...)):
         raise HTTPException(status_code=500, detail=f"Ingestion failed: {str(e)}")
         
     return {"status": "success", "filename": file.filename}
+
+
+@app.get("/api/documents")
+async def list_documents() -> list[dict[str, Any]]:
+    """List all runbook files in the runbooks directory with their chunk counts."""
+    runbooks_dir = os.path.join(root_dir, "runbooks")
+    if not os.path.exists(runbooks_dir):
+        return []
+
+    # Get chunk counts from ChromaDB
+    chunk_counts: dict[str, int] = {}
+    try:
+        col = ingest.get_collection()
+        res = col.get(include=["metadatas"])
+        for meta in res.get("metadatas", []):
+            if meta and "source" in meta:
+                src = meta["source"]
+                chunk_counts[src] = chunk_counts.get(src, 0) + 1
+    except Exception as e:
+        print("Warning: could not query collection chunks:", e)
+
+    results = []
+    valid_exts = (".md", ".txt", ".pdf", ".docx", ".pptx")
+    for f in sorted(os.listdir(runbooks_dir)):
+        if f.startswith(".") or not f.lower().endswith(valid_exts):
+            continue
+        fp = os.path.join(runbooks_dir, f)
+        stat = os.stat(fp)
+        results.append({
+            "filename": f,
+            "size_bytes": stat.st_size,
+            "modified_at": int(stat.st_mtime),
+            "chunks_count": chunk_counts.get(f, 0)
+        })
+    return results
+
+
+@app.delete("/api/documents/{filename}")
+async def delete_document(filename: str) -> dict[str, Any]:
+    """Delete a document from disk and purge its vector embeddings from ChromaDB."""
+    runbooks_dir = os.path.join(root_dir, "runbooks")
+    file_path = os.path.join(runbooks_dir, filename)
+
+    deleted_from_disk = False
+    if os.path.isfile(file_path):
+        try:
+            os.remove(file_path)
+            deleted_from_disk = True
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"Failed to delete file from disk: {e}")
+
+    deleted_chunks = 0
+    try:
+        col = ingest.get_collection()
+        res = col.get(where={"source": filename})
+        chunk_ids = res.get("ids", [])
+        if chunk_ids:
+            col.delete(ids=chunk_ids)
+            deleted_chunks = len(chunk_ids)
+    except Exception as e:
+        print(f"Warning: could not delete chunks for {filename} from ChromaDB: {e}")
+
+    return {
+        "status": "deleted",
+        "filename": filename,
+        "deleted_from_disk": deleted_from_disk,
+        "deleted_chunks": deleted_chunks
+    }
+
+
+@app.get("/api/system/stats")
+async def system_stats() -> dict[str, Any]:
+    """Return runtime telemetry, ChromaDB status, and system metrics."""
+    total_chunks = 0
+    try:
+        col = ingest.get_collection()
+        total_chunks = col.count()
+    except Exception:
+        pass
+
+    runbooks_dir = os.path.join(root_dir, "runbooks")
+    doc_count = 0
+    if os.path.exists(runbooks_dir):
+        doc_count = len([f for f in os.listdir(runbooks_dir) if not f.startswith(".")])
+
+    return {
+        "status": "operational",
+        "service": "VoiceOps SRE Copilot",
+        "total_chunks": total_chunks,
+        "documents_count": doc_count,
+        "embedding_model": "all-MiniLM-L6-v2 (Local)",
+        "tts_provider": "Rime coda / astra (WebSocket)",
+        "stt_provider": "Deepgram nova-3",
+        "llm_model": "openai/gpt-oss-20b (Groq)",
+        "turn_fencing": "Monotonic Turn ID & Async Cancel-and-Wait",
+        "webrtc": "LiveKit SFU"
+    }
+
+
+@app.post("/api/simulate")
+async def simulate_event(data: dict[str, Any]) -> dict[str, Any]:
+    """Helper simulation endpoint for interactive UI testing and live judge presentations."""
+    action = data.get("action", "ping")
+    if action == "check_server":
+        host = data.get("host", "prod-db-01")
+        return {
+            "event": "tool_complete",
+            "tool": "check_server_status",
+            "host": host,
+            "status": "healthy",
+            "cpu_percent": 34.8,
+            "memory_percent": 68.2,
+            "uptime": "21d 4h 12m",
+            "latency_ms": 14,
+            "message": f"Server status for {host}: healthy. CPU at 34.8%, memory at 68.2%, uptime 21d 4h 12m, latency 14ms."
+        }
+    elif action == "query_runbook":
+        query = data.get("query", "high latency spike recovery")
+        return {
+            "event": "tool_complete",
+            "tool": "query_runbook_rag",
+            "query": query,
+            "result_count": 2,
+            "message": f"Found 2 relevant runbook sections for '{query}'. Citing Agrim___Resume.pdf / SRE incident playbook: automated rollback triggers on p99 > 850ms."
+        }
+    elif action == "barge_in":
+        return {
+            "event": "stale_discard",
+            "tool": "query_runbook_rag",
+            "from_turn": 3,
+            "to_turn": 4,
+            "message": "⚠ Barge-in detected: stale tool result discarded (turn 3 → turn 4)"
+        }
+    return {"status": "ok"}
 
 
 # ── Serve frontend static files ─────────────────────────────────────

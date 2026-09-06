@@ -50,7 +50,7 @@ class TestResult:
 
 
 async def run_stress_test(
-    token_server_url: str = "http://localhost:8082",
+    token_server_url: str = os.environ.get("TOKEN_SERVER_URL", "http://localhost:8080"),
 ) -> TestResult:
     """Run the full stress test sequence.
 
