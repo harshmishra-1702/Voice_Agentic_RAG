@@ -14,7 +14,9 @@ import os
 
 from dotenv import load_dotenv
 
-load_dotenv()  # Load .env before anything else touches env vars
+root_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+load_dotenv(os.path.join(root_dir, ".env"))
+load_dotenv()  # Fallback to cwd if present
 
 from livekit import agents, rtc
 from livekit.plugins import deepgram, openai, rime

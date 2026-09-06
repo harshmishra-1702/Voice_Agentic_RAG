@@ -10,10 +10,17 @@ from __future__ import annotations
 
 import json
 import os
+import sys
 import uuid
+
+root_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+if root_dir not in sys.path:
+    sys.path.append(root_dir)
 
 from dotenv import load_dotenv
 
+# Explicitly load .env from project root, then fall back to cwd
+load_dotenv(os.path.join(root_dir, ".env"))
 load_dotenv()
 
 from fastapi import FastAPI, HTTPException, UploadFile, File
@@ -24,11 +31,6 @@ from livekit import api
 from pydantic import BaseModel
 import shutil
 import subprocess
-import sys
-
-root_dir = os.path.dirname(os.path.dirname(__file__))
-if root_dir not in sys.path:
-    sys.path.append(root_dir)
 
 try:
     import ingest
@@ -117,6 +119,7 @@ async def generate_token(req: TokenRequest) -> TokenResponse:
 
 
 @app.get("/api/health")
+@app.get("/health")
 async def health() -> dict[str, str]:
     """Health check endpoint for the stress test script."""
     return {"status": "ok", "service": "voiceops-token-server"}

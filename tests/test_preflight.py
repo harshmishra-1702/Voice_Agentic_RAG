@@ -100,7 +100,7 @@ async def test_validate_rime_voice_success(monkeypatch: pytest.MonkeyPatch) -> N
         return httpx.Response(200, json=payload, request=request)
 
     async def mock_get(self: Any, url: str, **kwargs: Any) -> httpx.Response:
-        return httpx.Response(200, json=payload)
+        return httpx.Response(200, json=payload, request=httpx.Request("GET", url))
 
     monkeypatch.setattr(httpx.AsyncClient, "get", mock_get)
 
@@ -118,7 +118,7 @@ async def test_validate_rime_voice_missing_speaker(monkeypatch: pytest.MonkeyPat
     }
 
     async def mock_get(self: Any, url: str, **kwargs: Any) -> httpx.Response:
-        return httpx.Response(200, json=payload)
+        return httpx.Response(200, json=payload, request=httpx.Request("GET", url))
 
     monkeypatch.setattr(httpx.AsyncClient, "get", mock_get)
 
@@ -137,7 +137,7 @@ async def test_validate_rime_voice_missing_model(monkeypatch: pytest.MonkeyPatch
     }
 
     async def mock_get(self: Any, url: str, **kwargs: Any) -> httpx.Response:
-        return httpx.Response(200, json=payload)
+        return httpx.Response(200, json=payload, request=httpx.Request("GET", url))
 
     monkeypatch.setattr(httpx.AsyncClient, "get", mock_get)
 
