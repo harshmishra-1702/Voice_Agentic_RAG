@@ -852,3 +852,88 @@ if (document.readyState === 'loading') {
 } else {
   initConstellationBackground();
 }
+
+// ==========================================================================
+// MemoryLab Experiment UI Logic
+// ==========================================================================
+
+const memorylabPanel = document.getElementById('memorylab-panel');
+const bdhPanel = document.getElementById('bdh-panel');
+const mlRunBtn = document.getElementById('ml-run-btn');
+const mlResetBtn = document.getElementById('memorylab-reset-btn');
+const mlVisualization = document.getElementById('ml-visualization');
+const mlMetrics = document.getElementById('ml-metrics');
+const bdhContent = document.getElementById('bdh-content');
+
+memorylabPanel.style.display = 'block';
+bdhPanel.style.display = 'block';
+
+mlRunBtn.addEventListener('click', async () => {
+  const sequenceStr = document.getElementById('ml-sequence').value;
+  const sequence = sequenceStr.split(/[\s,]+/).filter(x => x);
+  const memorySize = parseInt(document.getElementById('ml-capacity').value, 10);
+  const interference = parseFloat(document.getElementById('ml-interference').value);
+
+  mlVisualization.textContent = 'Running...';
+  mlMetrics.textContent = '';
+  
+  try {
+    const res = await fetch('/api/v1/experiment/memory/run', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        sequence: sequence,
+        memory_size: memorySize,
+        update_strength: 0.6,
+        interference: interference,
+        seed: 42,
+        retrieval_targets: sequence
+      })
+    });
+    
+    if (!res.ok) throw new Error('Experiment failed');
+    const data = await res.json();
+    renderExperimentResult(data);
+  } catch (err) {
+    mlVisualization.textContent = 'Error running experiment: ' + err.message;
+  }
+});
+
+function renderExperimentResult(data) {
+  let visText = \Experiment ID: \\n\nSteps:\n\;
+  for (const step of data.steps) {
+    visText += \	=\ Input=\\nState=[\ ...]\n\n\;
+  }
+  
+  visText += 'Retrieval:\n';
+  for (const ret of data.retrieval) {
+    visText += \\: Expected=\, Recovered=\ (Score: \)\n\;
+  }
+  
+  mlVisualization.textContent = visText;
+  mlMetrics.textContent = \Mean Recall: \ | Latest Recall: \ | Earliest Recall: \\;
+}
+
+mlResetBtn.addEventListener('click', () => {
+  mlVisualization.textContent = 'Ready to compute...';
+  mlMetrics.textContent = '';
+  document.getElementById('ml-sequence').value = 'A B C D E';
+  document.getElementById('ml-capacity').value = '8';
+  document.getElementById('ml-interference').value = '0.1';
+  bdhContent.textContent = 'No evidence loaded.';
+});
+
+// ==========================================================================
+// Browser Context Module
+// ==========================================================================
+function sendBrowserContext() {
+  if (room && room.state === 'connected') {
+    const payload = JSON.stringify({
+      url: window.location.href,
+      title: document.title,
+      selection: window.getSelection().toString()
+    });
+    room.localParticipant.publishData(new TextEncoder().encode(payload), { reliable: true, topic: 'browser_context' });
+  }
+}
+setInterval(sendBrowserContext, 5000);

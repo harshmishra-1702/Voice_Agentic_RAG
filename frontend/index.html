@@ -181,6 +181,42 @@
           </div>
         </div>
       </section>
+
+      <!-- MemoryLab Experiment Panel -->
+      <section class="card memorylab-card" id="memorylab-panel" style="display:none;">
+        <div class="card-header">
+          <div class="card-title-group">
+            <h2>MemoryLab Experiment</h2>
+          </div>
+          <button id="memorylab-reset-btn" class="action-btn">Reset</button>
+        </div>
+        <div class="experiment-content">
+          <div class="controls-row" style="margin-bottom: 10px;">
+            <label>Sequence: <input type="text" id="ml-sequence" value="A B C D E" /></label>
+            <label>Capacity: <input type="number" id="ml-capacity" value="8" style="width: 50px;"/></label>
+            <label>Interf.: <input type="number" step="0.1" id="ml-interference" value="0.1" style="width: 50px;"/></label>
+            <button id="ml-run-btn" class="action-btn">Run</button>
+          </div>
+          <div id="ml-visualization" class="visualization-box" style="font-family: monospace; background: var(--surface); padding: 10px; border-radius: 4px; overflow-x: auto; white-space: pre;">
+            Ready to compute...
+          </div>
+          <div id="ml-metrics" class="metrics-box" style="margin-top: 10px; font-size: 0.9rem;">
+            <!-- Metrics render here -->
+          </div>
+        </div>
+      </section>
+
+      <!-- BDH Evidence Panel -->
+      <section class="card bdh-card" id="bdh-panel" style="display:none;">
+        <div class="card-header">
+          <div class="card-title-group">
+            <h2>BDH Evidence</h2>
+          </div>
+        </div>
+        <div id="bdh-content" style="font-size: 0.9rem; color: var(--text-secondary);">
+          No evidence loaded.
+        </div>
+      </section>
     </div>
 
     <!-- Right Column: Voice Ops Transcript & Mission Stream -->

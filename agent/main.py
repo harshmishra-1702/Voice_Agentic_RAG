@@ -55,26 +55,16 @@ async def entrypoint(ctx: JobContext) -> None:
     agent = VoiceOpsAgent(turn_fence=turn_fence)
 
     # ── Configure session ───────────────────────────────────────────
-    # Groq LLM via OpenAI-compatible plugin (free tier)
-    groq_api_key = os.environ.get("GROQ_API_KEY", "")
+    from .providers import get_stt_adapter, get_llm_adapter, get_tts_adapter
+    
+    stt_plugin = get_stt_adapter().get_plugin()
+    llm_plugin = get_llm_adapter().get_plugin()
+    tts_plugin = get_tts_adapter().get_plugin()
+    
     session = AgentSession(
-        stt=deepgram.STT(
-            model="nova-3",
-            language="en",
-            punctuate=True,
-            smart_format=True,
-        ),
-        llm=openai.LLM(
-            model="openai/gpt-oss-20b",
-            base_url="https://api.groq.com/openai/v1",
-            api_key=groq_api_key,
-            temperature=0.6,
-        ),
-        tts=rime.TTS(
-            model="coda",
-            speaker="astra",
-            use_websocket=True,  # MANDATORY — streaming + word-level timestamps
-        )
+        stt=stt_plugin,
+        llm=llm_plugin,
+        tts=tts_plugin
     )
 
     # ── Wire interruption events to the turn fence ──────────────────
@@ -128,6 +118,15 @@ async def entrypoint(ctx: JobContext) -> None:
         )
 
     turn_fence.on_discard(on_discard)
+
+    @ctx.room.on("data_received")
+    def on_data_received(data_packet: rtc.DataPacket) -> None:
+        if data_packet.topic == "browser_context":
+            try:
+                payload = json.loads(data_packet.data.decode("utf-8"))
+                agent.update_browser_context(payload)
+            except Exception as e:
+                logger.warning(f"Failed to parse browser context: {e}")
 
     # ── Start the session ───────────────────────────────────────────
     await session.start(room=ctx.room, agent=agent)

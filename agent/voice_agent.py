@@ -79,6 +79,25 @@ class VoiceOpsAgent(Agent):
         self._filler_index += 1
         return phrase
 
+    def update_browser_context(self, context: dict[str, Any]) -> None:
+        """Update the agent's system prompt or internal state with the latest browser context."""
+        url = context.get("url", "")
+        title = context.get("title", "")
+        selection = context.get("selection", "")
+        
+        # We can store this in the agent and optionally inject it into the LLM context if asked
+        self._latest_browser_context = context
+        
+        context_str = f"Current User Browser Context: URL={url}, Title={title}"
+        if selection:
+            context_str += f", Selection='{selection}'"
+            
+        # Update system instructions dynamically by appending the context
+        # In a real app we'd update the prompt dynamically per turn,
+        # but here we'll just keep it as a property the tools can read if needed,
+        # or we could push a system message.
+        self._system_prompt_context = context_str
+
     async def _send_ui_event(self, event: dict[str, Any]) -> None:
         """Send a status event to the frontend via data channel."""
         if self._data_channel_send is not None:
@@ -246,6 +265,24 @@ class VoiceOpsAgent(Agent):
                 return f"BDH Evidence for '{concept}': {evidence}. Please explain this to the user."
             else:
                 return "I don't have enough source evidence to make that claim."
+        except asyncio.CancelledError:
+            return ""
+
+    @function_tool(description="Check the user's current browser context (URL, Title, Selection)")
+    async def check_browser_context(self) -> str:
+        dispatch_turn = self.turn_fence.current_turn_id
+        session = self.session
+        session.say("Checking your browser screen...", add_to_chat_ctx=False, allow_interruptions=True)
+        
+        try:
+            await asyncio.sleep(0.1)
+            if self.turn_fence.is_stale(dispatch_turn):
+                await self.turn_fence.cancel_stale(dispatch_turn)
+                return ""
+            
+            self.turn_fence.mark_complete(dispatch_turn)
+            ctx_str = getattr(self, "_system_prompt_context", "No browser context available.")
+            return f"Browser Context: {ctx_str}"
         except asyncio.CancelledError:
             return ""
 
