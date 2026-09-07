@@ -900,18 +900,18 @@ mlRunBtn.addEventListener('click', async () => {
 });
 
 function renderExperimentResult(data) {
-  let visText = \Experiment ID: \\n\nSteps:\n\;
+  let visText = `Experiment ID: ${data.experiment_id}\n\nSteps:\n`;
   for (const step of data.steps) {
-    visText += \	=\ Input=\\nState=[\ ...]\n\n\;
+    visText += `[Step ${step.step_index}] Input=${step.input_concept}\nState=[${step.state_vector.slice(0,4).map(v => v.toFixed(2)).join(', ')} ...]\n\n`;
   }
   
   visText += 'Retrieval:\n';
   for (const ret of data.retrieval) {
-    visText += \\: Expected=\, Recovered=\ (Score: \)\n\;
+    visText += `${ret.concept}: Expected=${ret.expected_activation.toFixed(2)}, Recovered=${ret.recovered_activation.toFixed(2)} (Score: ${ret.match_score.toFixed(2)})\n`;
   }
   
   mlVisualization.textContent = visText;
-  mlMetrics.textContent = \Mean Recall: \ | Latest Recall: \ | Earliest Recall: \\;
+  mlMetrics.textContent = `Mean Recall: ${data.metrics.mean_recall.toFixed(2)} | Latest Recall: ${data.metrics.latest_item_recall.toFixed(2)} | Earliest Recall: ${data.metrics.earliest_item_recall.toFixed(2)}`;
 }
 
 mlResetBtn.addEventListener('click', () => {

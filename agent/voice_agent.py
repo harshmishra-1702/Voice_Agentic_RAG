@@ -21,7 +21,7 @@ from typing import Any
 
 from livekit.agents import Agent, RunContext, function_tool
 
-from .rag import search_runbooks
+from .rag import search_knowledge
 from .turn_fence import TurnFenceManager
 
 logger = logging.getLogger("voiceops.agent")
@@ -281,7 +281,28 @@ class VoiceOpsAgent(Agent):
                 return ""
             
             self.turn_fence.mark_complete(dispatch_turn)
-            ctx_str = getattr(self, "_system_prompt_context", "No browser context available.")
+            ctx_str = getattr(self, "_system_prompt_context", None)
+            
+            # Also try to read from the extension's written file if it exists
+            import os
+            import json
+            context_file = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), ".browser_context.json")
+            if os.path.exists(context_file):
+                try:
+                    with open(context_file, "r") as f:
+                        ext_ctx = json.load(f)
+                    url = ext_ctx.get("url", "")
+                    title = ext_ctx.get("title", "")
+                    selection = ext_ctx.get("selection", "")
+                    ctx_str = f"Extension Context: URL={url}, Title={title}"
+                    if selection:
+                        ctx_str += f", Selection='{selection}'"
+                except Exception:
+                    pass
+                    
+            if not ctx_str:
+                ctx_str = "No browser context available."
+                
             return f"Browser Context: {ctx_str}"
         except asyncio.CancelledError:
             return ""

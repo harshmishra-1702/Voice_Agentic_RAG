@@ -87,6 +87,17 @@ async def run_memory_experiment_api(req: ExperimentRequest):
         retrieval_targets=req.retrieval_targets
     )
 
+@app.post("/api/v1/context")
+async def update_browser_context(context: dict):
+    # Write to a shared file so the agent process can pick it up
+    try:
+        context_file = os.path.join(root_dir, ".browser_context.json")
+        with open(context_file, "w") as f:
+            json.dump(context, f)
+        return {"status": "ok"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
 @app.post("/api/token", response_model=TokenResponse)
 async def generate_token(req: TokenRequest) -> TokenResponse:
     """Mint a short-lived, scoped LiveKit join token.
