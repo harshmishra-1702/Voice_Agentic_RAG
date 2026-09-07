@@ -1,0 +1,28 @@
+{
+  "manifest_version": 3,
+  "name": "MemoryLab Research Companion",
+  "version": "1.0.0",
+  "description": "Voice-enabled research companion for BDH and recurrent memory concepts.",
+  "permissions": [
+    "sidePanel",
+    "storage",
+    "scripting",
+    "activeTab"
+  ],
+  "background": {
+    "service_worker": "service_worker.js"
+  },
+  "action": {
+    "default_title": "Open MemoryLab Companion"
+  },
+  "side_panel": {
+    "default_path": "sidepanel/sidepanel.html"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content/content.js"],
+      "css": ["content/content.css"]
+    }
+  ]
+}
