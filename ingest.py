@@ -92,10 +92,55 @@ def ingest(target_filename: str = None) -> None:
     print("MemoryLab — Knowledge Ingestion")
     print(f"{'='*50}\n")
 
-    # Load and chunk
-    print(f"Loading knowledge from: {KNOWLEDGE_DIR}")
-    chunks = load_knowledge()
-    print(f"\nTotal chunks: {len(chunks)}")
+    chunks = []
+    if target_filename:
+        print(f"Loading single file: {target_filename}")
+        runbooks_dir = os.path.join(os.path.dirname(__file__), "runbooks")
+        filepath = os.path.join(runbooks_dir, target_filename)
+        if os.path.exists(filepath):
+            content = ""
+            ext = os.path.splitext(target_filename)[1].lower()
+            try:
+                if ext == ".pdf":
+                    import pypdf
+                    with open(filepath, "rb") as f:
+                        reader = pypdf.PdfReader(f)
+                        for page in reader.pages:
+                            content += page.extract_text() + "\n"
+                elif ext in [".md", ".txt"]:
+                    with open(filepath, "r", encoding="utf-8") as f:
+                        content = f.read()
+                else:
+                    # Fallback for docx/pptx or other files if libraries aren't installed
+                    # We'll try to read it as text, ignoring errors
+                    with open(filepath, "r", encoding="utf-8", errors="ignore") as f:
+                        content = f.read()
+            except Exception as e:
+                print(f"Failed to read file {target_filename}: {e}")
+                
+            # Simple chunking for dynamic text/md files
+            words = content.split()
+            chunk_size = 300
+            for i in range(0, len(words), chunk_size):
+                chunk_words = words[i:i + chunk_size]
+                chunk_text = " ".join(chunk_words)
+                chunks.append({
+                    "id": f"{target_filename}::chunk-{i}",
+                    "text": chunk_text,
+                    "metadata": {
+                        "source_title": target_filename,
+                        "concept": "Dynamic Upload",
+                        "evidence_level": "dynamic"
+                    }
+                })
+        else:
+            print(f"File not found: {filepath}")
+    else:
+        # Load and chunk original JSON corpus
+        print(f"Loading knowledge from: {KNOWLEDGE_DIR}")
+        chunks = load_knowledge()
+
+    print(f"\nTotal chunks to process: {len(chunks)}")
 
     if not chunks:
         print("No chunks to ingest.")

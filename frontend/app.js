@@ -159,8 +159,7 @@ function addDocumentPill(filename) {
 }
 
 // Initial default sample pill for display
-addDocumentPill('k8s_redis_failover.md');
-addDocumentPill('network_partitions.md');
+// Removed to only show dynamically uploaded files
 
 // --- LiveKit Connection Logic ---
 connectBtn.addEventListener('click', connectSession);
@@ -854,74 +853,7 @@ if (document.readyState === 'loading') {
 }
 
 // ==========================================================================
-// MemoryLab Experiment UI Logic
-// ==========================================================================
-
-const memorylabPanel = document.getElementById('memorylab-panel');
-const bdhPanel = document.getElementById('bdh-panel');
-const mlRunBtn = document.getElementById('ml-run-btn');
-const mlResetBtn = document.getElementById('memorylab-reset-btn');
-const mlVisualization = document.getElementById('ml-visualization');
-const mlMetrics = document.getElementById('ml-metrics');
-const bdhContent = document.getElementById('bdh-content');
-
-memorylabPanel.style.display = 'block';
-bdhPanel.style.display = 'block';
-
-mlRunBtn.addEventListener('click', async () => {
-  const sequenceStr = document.getElementById('ml-sequence').value;
-  const sequence = sequenceStr.split(/[\s,]+/).filter(x => x);
-  const memorySize = parseInt(document.getElementById('ml-capacity').value, 10);
-  const interference = parseFloat(document.getElementById('ml-interference').value);
-
-  mlVisualization.textContent = 'Running...';
-  mlMetrics.textContent = '';
-  
-  try {
-    const res = await fetch('/api/v1/experiment/memory/run', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        sequence: sequence,
-        memory_size: memorySize,
-        update_strength: 0.6,
-        interference: interference,
-        seed: 42,
-        retrieval_targets: sequence
-      })
-    });
-    
-    if (!res.ok) throw new Error('Experiment failed');
-    const data = await res.json();
-    renderExperimentResult(data);
-  } catch (err) {
-    mlVisualization.textContent = 'Error running experiment: ' + err.message;
-  }
-});
-
-function renderExperimentResult(data) {
-  let visText = `Experiment ID: ${data.experiment_id}\n\nSteps:\n`;
-  for (const step of data.steps) {
-    visText += `[Step ${step.step_index}] Input=${step.input_concept}\nState=[${step.state_vector.slice(0,4).map(v => v.toFixed(2)).join(', ')} ...]\n\n`;
-  }
-  
-  visText += 'Retrieval:\n';
-  for (const ret of data.retrieval) {
-    visText += `${ret.concept}: Expected=${ret.expected_activation.toFixed(2)}, Recovered=${ret.recovered_activation.toFixed(2)} (Score: ${ret.match_score.toFixed(2)})\n`;
-  }
-  
-  mlVisualization.textContent = visText;
-  mlMetrics.textContent = `Mean Recall: ${data.metrics.mean_recall.toFixed(2)} | Latest Recall: ${data.metrics.latest_item_recall.toFixed(2)} | Earliest Recall: ${data.metrics.earliest_item_recall.toFixed(2)}`;
-}
-
-mlResetBtn.addEventListener('click', () => {
-  mlVisualization.textContent = 'Ready to compute...';
-  mlMetrics.textContent = '';
-  document.getElementById('ml-sequence').value = 'A B C D E';
-  document.getElementById('ml-capacity').value = '8';
-  document.getElementById('ml-interference').value = '0.1';
-  bdhContent.textContent = 'No evidence loaded.';
-});
+// UI components removed
 
 // ==========================================================================
 // Browser Context Module

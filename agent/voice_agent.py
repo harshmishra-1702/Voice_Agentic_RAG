@@ -66,7 +66,9 @@ class VoiceOpsAgent(Agent):
                 "7. Never invent citations or results.\n"
                 "8. If evidence is insufficient, say so.\n"
                 "9. Keep spoken responses concise unless the learner asks for depth.\n"
-                "10. Encourage prediction and experimentation."
+                "10. Encourage prediction and experimentation.\n"
+                "11. CRITICAL: If the user says they uploaded, shared, or dropped a file (like a PDF, text, or document), you MUST use the `query_knowledge_base` tool to search for their question. The system automatically reads their files into your knowledge base, so DO NOT say you cannot read or open PDFs. Just search the knowledge base!\n"
+                "12. CRITICAL FORMATTING: You are a VOICE agent interacting via Text-To-Speech. Do NOT use ANY markdown formatting like asterisks (**), hashes (##), backticks (```), or dollar signs ($$). Speak naturally using plain text and conversational prose. DO NOT use bullet points or lists; use natural spoken transitions instead."
             ),
         )
         self.turn_fence = turn_fence
@@ -106,7 +108,7 @@ class VoiceOpsAgent(Agent):
             except Exception:
                 logger.debug("Failed to send UI event", exc_info=True)
 
-    @function_tool(description="Search the educational corpus for information about BDH, recurrent memory, and related concepts.")
+    @function_tool(description="Search the indexed database, educational corpus, AND all dynamically user-uploaded files or documents for information to answer the user's questions.")
     async def query_knowledge_base(self, query: str) -> str:
         session = self.session
         dispatch_turn = self.turn_fence.current_turn_id
@@ -165,16 +167,20 @@ class VoiceOpsAgent(Agent):
             if not results:
                 return "No matching educational entries found for that query."
 
-            # Format results for the LLM to summarize
+            # Format results for the LLM to summarize, stripping null bytes and weird unicode
             formatted = "\n\n".join(
-                f"[Source: {r.source_title}, Evidence Level: {r.evidence_level}] (relevance: {r.score:.2f})\n{r.text}"
+                f"[Source: {r.source_title}, Evidence Level: {r.evidence_level}] (relevance: {r.score:.2f})\n{r.text.replace(chr(0), '')}"
                 for r in results
             )
-            return (
+            prompt_str = (
                 f"Found {len(results)} relevant source sections:\n\n{formatted}\n\n"
                 "Carefully answer the user's question using the information above. "
-                "Make sure to explicitly cite the source and distinguish between toy-model behavior and published evidence."
+                "Make sure to explicitly cite the source and distinguish between toy-model behavior and published evidence. "
+                "CRITICAL: Keep your response extremely concise, direct, and conversational (1-3 sentences maximum) to minimize audio generation delay. "
+                "DO NOT use markdown formatting, bullet points, or special characters like asterisks or hashes in your spoken response."
             )
+            print(f"RAG search successful. Returned {len(results)} chunks to LLM.", flush=True)
+            return prompt_str
 
         except asyncio.CancelledError:
             logger.info("RAG search cancelled (turn %d superseded)", dispatch_turn)

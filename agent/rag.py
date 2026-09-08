@@ -53,14 +53,22 @@ def _get_embedding_fn() -> SentenceTransformerEmbeddingFunction:
     )
 
 
+_collection_cache = None
+
+
 def get_collection() -> chromadb.Collection:
     """Get or create the ChromaDB collection with persistent storage."""
+    global _collection_cache
+    if _collection_cache is not None:
+        return _collection_cache
+        
     client = chromadb.PersistentClient(path=CHROMA_PATH)
-    return client.get_or_create_collection(
+    _collection_cache = client.get_or_create_collection(
         name=COLLECTION_NAME,
         embedding_function=_get_embedding_fn(),
         metadata={"hnsw:space": "cosine"},
     )
+    return _collection_cache
 
 
 async def search_knowledge(query: str, top_k: int = 3) -> list[SearchResult]:
@@ -70,19 +78,14 @@ async def search_knowledge(query: str, top_k: int = 3) -> list[SearchResult]:
     ChromaDB's query is synchronous, so we run it in a thread executor
     to avoid blocking the event loop (critical for interruption timing).
     """
-    import asyncio
-
-    loop = asyncio.get_running_loop()
+    # ChromaDB's query is synchronous. We run it directly to avoid PyTorch OpenMP thread deadlocks on Windows.
     collection = get_collection()
 
-    def _query() -> dict[str, Any]:
-        return collection.query(
-            query_texts=[query],
-            n_results=top_k,
-            include=["documents", "metadatas", "distances"],
-        )
-
-    results = await loop.run_in_executor(None, _query)
+    results = collection.query(
+        query_texts=[query],
+        n_results=top_k,
+        include=["documents", "metadatas", "distances"],
+    )
 
     search_results: list[SearchResult] = []
     documents = results.get("documents", [[]])[0]
