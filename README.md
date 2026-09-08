@@ -18,8 +18,9 @@ LiveKit Cloud (media routing)
 Python Agent Worker (livekit-agents)
   ├─ VAD:  Silero (bundled default)
   ├─ STT:  Deepgram nova-3
-  ├─ LLM:  Groq llama-3.3-70b-versatile (free tier, OpenAI-compatible)
+  ├─ LLM:  OpenRouter / Groq (Gemini / Llama 3 / Qwen)
   │         ├─ tool: query_runbook_rag(query) → ChromaDB semantic search
+  │         ├─ tool: search_the_web(query) → Tavily API web search
   │         └─ tool: check_server_status(host) → mocked async ping
   ├─ TTS:  Rime coda / astra (WebSocket streaming)
   ├─ Embeddings: local sentence-transformers (all-MiniLM-L6-v2)
@@ -40,7 +41,7 @@ Python Agent Worker (livekit-agents)
 
 - Python 3.11+
 - A [LiveKit Cloud](https://cloud.livekit.io/) project (free tier works)
-- API keys for: Rime, Deepgram, Groq (all free tier)
+- API keys for: Rime, Deepgram, OpenRouter/Groq, Tavily, Jina
 
 ### Installation
 
@@ -77,10 +78,10 @@ This reads the markdown files in `runbooks/`, chunks them, embeds them with a lo
 python -m agent.main dev
 
 # Terminal 2: Start the token server + frontend
-uvicorn agent.token_server:app --port 8080
+uvicorn agent.token_server:app --port 8000
 ```
 
-Open `http://localhost:8080` in your browser and click **Connect**.
+Open `http://localhost:8000` in your browser and click **Connect**.
 
 ### Run the Stress Test
 
@@ -94,7 +95,9 @@ python stress_test.py
 |---|---|---|
 | **Rime** | Text-to-Speech | Model: `coda`, Speaker: `astra`, Language: `en-us`, Transport: WebSocket (`use_websocket=True`), Endpoint: `wss://users.rime.ai/v1/rime-tts`, Audio: PCM streamed |
 | **Deepgram** | Speech-to-Text | Model: `nova-3`, Language: `en` |
-| **Groq** | LLM (function calling) | Model: `llama-3.3-70b-versatile`, Free tier, OpenAI-compatible API |
+| **OpenRouter / Groq** | LLM (function calling) | Uses Gemini Flash Lite / Llama 3 / Qwen, OpenAI-compatible API |
+| **Tavily** | Web Search | Search API for current internet data |
+| **Jina** | URL Reader | `r.jina.ai` for reading specific URLs |
 | **sentence-transformers** | Embeddings (local) | Model: `all-MiniLM-L6-v2`, runs on-device, no API key |
 | **LiveKit** | WebRTC media routing | Cloud or self-hosted SFU |
 | **ChromaDB** | Vector store | Local persistent, cosine similarity |

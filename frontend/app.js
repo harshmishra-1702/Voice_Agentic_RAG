@@ -9,6 +9,9 @@ const connectOverlay = document.getElementById('connect-overlay');
 const statusPill = document.getElementById('status-pill');
 const statusPillText = document.getElementById('status-pill-text');
 const startListenBtn = document.getElementById('start-listen-btn');
+const muteAgentBtn = document.getElementById('mute-agent-btn');
+const muteBtnText = document.getElementById('mute-btn-text');
+const muteIcon = document.getElementById('mute-icon');
 const micBtnText = document.getElementById('mic-btn-text');
 const transcriptSection = document.getElementById('transcript-section');
 const transcriptContainer = document.getElementById('transcript-container');
@@ -212,6 +215,12 @@ async function connectSession() {
     setupRoomListeners(room);
     await room.connect(url, token);
     
+    const heroLogo = document.querySelector('.hero-logo-icon');
+    if (heroLogo) heroLogo.classList.add('waveform-active');
+    
+    // Wait for the animation to play out
+    await new Promise(r => setTimeout(r, 600));
+
     connectOverlay.classList.add('hidden');
     connectionDot.classList.remove('disconnected');
     connectionDot.classList.add('connected');
@@ -221,6 +230,7 @@ async function connectSession() {
     if (emptyState) emptyState.remove();
     
     startListenBtn.classList.remove('hidden');
+    muteAgentBtn.classList.remove('hidden');
     showStatus('Connected • Mic Standby', true, 'var(--text-muted)');
     rttMeter.textContent = '14 ms';
     
@@ -241,6 +251,20 @@ async function connectSession() {
 
 // --- Mic Toggle ---
 startListenBtn.addEventListener('click', toggleMic);
+muteAgentBtn.addEventListener('click', toggleAgentMute);
+
+function toggleAgentMute() {
+  audioElement.muted = !audioElement.muted;
+  if (audioElement.muted) {
+    muteBtnText.textContent = 'Unmute Agent';
+    muteAgentBtn.classList.add('active-mic');
+    muteIcon.innerHTML = '<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><line x1="23" y1="9" x2="17" y2="15"></line><line x1="17" y1="9" x2="23" y2="15"></line>';
+  } else {
+    muteBtnText.textContent = 'Mute Agent';
+    muteAgentBtn.classList.remove('active-mic');
+    muteIcon.innerHTML = '<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>';
+  }
+}
 
 async function toggleMic() {
   if (!room || room.state !== 'connected') return;

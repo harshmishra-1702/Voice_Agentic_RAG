@@ -16,8 +16,10 @@ from __future__ import annotations
 import os
 import sys
 
-# Force HuggingFace offline to completely eliminate the 30-40s network latency
+# Force HuggingFace offline to completely eliminate network latency
 os.environ["HF_HUB_OFFLINE"] = "1"
+os.environ["KMP_DUPLICATE_LIB_OK"] = "TRUE"
+os.environ["OMP_NUM_THREADS"] = "1"
 
 import chromadb
 from chromadb.utils.embedding_functions import SentenceTransformerEmbeddingFunction
@@ -107,12 +109,35 @@ def ingest(target_filename: str = None) -> None:
                         reader = pypdf.PdfReader(f)
                         for page in reader.pages:
                             content += page.extract_text() + "\n"
+                elif ext in [".pptx", ".ppt"]:
+                    import zipfile
+                    import xml.etree.ElementTree as ET
+                    try:
+                        with zipfile.ZipFile(filepath, "r") as z:
+                            for name in sorted(z.namelist()):
+                                if name.startswith("ppt/slides/slide") and name.endswith(".xml"):
+                                    root = ET.fromstring(z.read(name))
+                                    texts = [elem.text for elem in root.iter() if elem.text and elem.text.strip()]
+                                    if texts:
+                                        content += " ".join(texts) + "\n\n"
+                    except Exception as pe:
+                        print(f"PPTX extraction error: {pe}")
+                elif ext == ".docx":
+                    import zipfile
+                    import xml.etree.ElementTree as ET
+                    try:
+                        with zipfile.ZipFile(filepath, "r") as z:
+                            root = ET.fromstring(z.read("word/document.xml"))
+                            texts = [elem.text for elem in root.iter() if elem.text and elem.text.strip()]
+                            if texts:
+                                content += " ".join(texts) + "\n\n"
+                    except Exception as de:
+                        print(f"DOCX extraction error: {de}")
                 elif ext in [".md", ".txt"]:
                     with open(filepath, "r", encoding="utf-8") as f:
                         content = f.read()
                 else:
-                    # Fallback for docx/pptx or other files if libraries aren't installed
-                    # We'll try to read it as text, ignoring errors
+                    # Fallback for other files
                     with open(filepath, "r", encoding="utf-8", errors="ignore") as f:
                         content = f.read()
             except Exception as e:

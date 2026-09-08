@@ -98,8 +98,8 @@ header {
   align-items: center;
   padding: 0.85rem 1.75rem;
   background-color: rgba(20, 17, 13, 0.88);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
   border-bottom: 1px solid var(--border);
   position: relative;
   z-index: 10;
@@ -1064,9 +1064,9 @@ header h1 {
 #connect-overlay {
   position: fixed;
   inset: 0;
-  background-color: rgba(7, 6, 5, 0.88);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
+  background-color: rgba(7, 6, 5, 0.3);
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
   display: flex;
   justify-content: center;
   align-items: center;
@@ -1254,4 +1254,22 @@ header h1 {
   .constellation-bg-canvas {
     display: none !important;
   }
+}
+
+
+.hero-logo-icon {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+#morphing-underscore {
+  transition: d 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+  filter: drop-shadow(0 0 8px var(--primary-glow));
+}
+#hero-terminal-svg polyline {
+  filter: drop-shadow(0 0 8px var(--accent-glow));
+}
+.hero-logo-icon.waveform-active #morphing-underscore {
+  d: path('M34 44 L38 20 L42 56 L46 16 L50 48 L54 36 L58 44');
 }

@@ -49,6 +49,18 @@ class OllamaLLMAdapter(LanguageModelProvider):
             api_key="ollama"
         )
 
+class OpenRouterLLMAdapter(LanguageModelProvider):
+    def get_plugin(self):
+        from livekit.plugins import openai
+        # Nemotron Lightning is an extremely fast and capable free tier model on OpenRouter
+        model = os.environ.get("OPENROUTER_MODEL", "nvidia/nemotron-3.5-lightning:free")
+        return openai.LLM(
+            model=model,
+            base_url="https://openrouter.ai/api/v1",
+            api_key=os.environ.get("OPENROUTER_API_KEY", ""),
+            temperature=0.6,
+        )
+
 class TextToSpeechProvider:
     def get_plugin(self):
         raise NotImplementedError
@@ -81,6 +93,8 @@ def get_llm_adapter() -> LanguageModelProvider:
     provider = os.environ.get("LLM_PROVIDER", "groq").lower()
     if provider == "ollama":
         return OllamaLLMAdapter()
+    if provider == "openrouter":
+        return OpenRouterLLMAdapter()
     return GroqLLMAdapter()
 
 def get_tts_adapter() -> TextToSpeechProvider:

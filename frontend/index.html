@@ -22,17 +22,14 @@
   <!-- Header / System Status Bar -->
   <header>
     <div class="header-left">
-      <div class="logo-box">
-        <svg class="logo-svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-          <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
-        </svg>
+      <div class="logo-box" style="background: transparent; border: none; padding: 0;">
+        <img src="logo.png" alt="VoiceOps Logo" style="width: 42px; height: 42px; border-radius: 8px;">
       </div>
       <div class="brand-info">
         <div class="title-row">
           <h1>VoiceOps</h1>
-          <span class="version-tag">v1.2.0 • SRE Console</span>
         </div>
-        <p class="subtitle">Voice-Native Incident Recovery & Turn-Fenced RAG</p>
+        <p class="subtitle">Voice Native RAG based agent</p>
       </div>
     </div>
 
@@ -153,15 +150,24 @@
               <span class="status-pulse-dot"></span>
               <span id="status-pill-text">Awaiting Session...</span>
             </div>
-            <button id="start-listen-btn" class="action-btn hidden" title="Toggle local microphone">
-              <svg class="mic-svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
-                <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
-                <line x1="12" y1="19" x2="12" y2="23"></line>
-                <line x1="8" y1="23" x2="16" y2="23"></line>
-              </svg>
-              <span id="mic-btn-text">Start Mic</span>
-            </button>
+            <div style="display: flex; gap: 8px;">
+              <button id="start-listen-btn" class="action-btn hidden" title="Toggle local microphone">
+                <svg class="mic-svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
+                  <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+                  <line x1="12" y1="19" x2="12" y2="23"></line>
+                  <line x1="8" y1="23" x2="16" y2="23"></line>
+                </svg>
+                <span id="mic-btn-text">Start Mic</span>
+              </button>
+              <button id="mute-agent-btn" class="action-btn hidden" title="Toggle agent audio">
+                <svg id="mute-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+                  <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+                </svg>
+                <span id="mute-btn-text">Mute Agent</span>
+              </button>
+            </div>
           </div>
         </div>
 
@@ -203,13 +209,7 @@
         </div>
       </div>
 
-      <!-- Quick-Prompt Operator Suggestions -->
-      <div class="query-suggestions" id="query-suggestions">
-        <span class="suggestions-label">Try asking:</span>
-        <button class="prompt-chip" data-prompt="What are the failover steps for cluster redis-01?">"Failover steps for redis-01"</button>
-        <button class="prompt-chip" data-prompt="Check memory status and alert thresholds on rack-14.">"Check status on rack-14"</button>
-        <button class="prompt-chip" data-prompt="Wait, stop that! Check the primary firewall first.">"Wait, stop that! Check firewall"</button>
-      </div>
+      <!-- Quick-Prompt Operator Suggestions Removed -->
 
       <!-- Transcript Section -->
       <section id="transcript-section">
@@ -241,27 +241,32 @@
   <div id="connect-overlay">
     <div class="overlay-card">
       <div class="overlay-header">
-        <div class="sparkle-icon">
-          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+        <div class="hero-logo-icon">
+          <svg id="hero-terminal-svg" width="64" height="64" viewBox="0 0 64 64" fill="none" stroke-width="5" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="14 20 30 32 14 44" stroke="#00bfff" style="filter: drop-shadow(0 0 6px rgba(0, 191, 255, 0.8));"></polyline>
+            <path id="morphing-underscore" d="M34 44 L38 44 L42 44 L46 44 L50 44 L54 44 L58 44" stroke="#ff7700" style="filter: drop-shadow(0 0 6px rgba(255, 119, 0, 0.8)); transition: d 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);"></path>
           </svg>
         </div>
         <h2>VoiceOps SRE Console</h2>
-        <p class="overlay-desc">Full-duplex hands-free incident response powered by LiveKit WebRTC, Deepgram Nova-3, and Rime Coda TTS.</p>
+        <p class="overlay-desc">A Voice-Native RAG Agent with live web search, document knowledge ingestion, and Chrome extension integration.</p>
       </div>
 
       <div class="overlay-features">
         <div class="feat-row">
           <svg class="check-svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg>
-          <span><strong>Zero PTT / Hands-Busy Ready:</strong> Autonomous VAD continuous listening</span>
+          <span><strong>Dynamic Document RAG:</strong> Drag & drop files to instantly query them via semantic vector search</span>
         </div>
         <div class="feat-row">
           <svg class="check-svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg>
-          <span><strong>Turn-Fenced Interruption:</strong> Stale slow-resolving tool calls are discarded</span>
+          <span><strong>Live Internet Search:</strong> Instantly fetch real-time data from the web using Tavily</span>
         </div>
         <div class="feat-row">
           <svg class="check-svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg>
-          <span><strong>High-Fidelity Rime Speech:</strong> Real-time WebSocket audio streaming</span>
+          <span><strong>Chrome Extension Integration:</strong> Access the voice agent seamlessly while browsing other tabs</span>
+        </div>
+        <div class="feat-row">
+          <svg class="check-svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg>
+          <span><strong>Turn-Fenced Interruption:</strong> Talk over the agent naturally; slow tool calls are cleanly discarded</span>
         </div>
       </div>
 
