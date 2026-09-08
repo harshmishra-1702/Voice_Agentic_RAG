@@ -1,5 +1,5 @@
 :root {
-  /* Colors â€” Warm Near-Black Industrial Console */
+  /* Colors — Warm Near-Black Industrial Console */
   --bg: #0B0A08;
   --surface: #14110D;
   --surface-raised: #1D1812;
@@ -1255,7 +1255,6 @@ header h1 {
     display: none !important;
   }
 }
-
 
 .hero-logo-icon {
   display: flex;

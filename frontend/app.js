@@ -725,7 +725,7 @@ function initConstellationBackground() {
           vy: 0,
           baseX: x,
           baseY: y,
-          radius: Math.random() * 1.2 + 1.1,
+          radius: Math.random() * 1.8 + 1.6,
           label: `${(i * 7).toString(16).toUpperCase()}:${(j * 11).toString(16).toUpperCase()}`,
           pulse: Math.random() * Math.PI * 2,
         });
@@ -810,7 +810,7 @@ function initConstellationBackground() {
 
         if (distSq < MAX_CONN_DIST_SQ) {
           const nDist = Math.sqrt(distSq);
-          const alpha = (1 - nDist / MAX_CONN_DIST) * 0.12;
+          const alpha = (1 - nDist / MAX_CONN_DIST) * 0.4;
 
           ctx.strokeStyle = `rgba(${nodeColor}, ${alpha})`;
           ctx.lineWidth = 0.65;
@@ -831,7 +831,7 @@ function initConstellationBackground() {
       const isNear = dist < mouse.radius;
 
       // Subtle base opacity for gentle background presence
-      const baseAlpha = isNear ? 0.9 : 0.2 + Math.sin(n.pulse) * 0.08;
+      const baseAlpha = isNear ? 1.0 : 0.7 + Math.sin(n.pulse) * 0.2;
 
       ctx.fillStyle = isNear
         ? `rgba(${accentColor}, ${baseAlpha})`
