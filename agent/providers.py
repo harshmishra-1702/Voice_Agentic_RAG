@@ -29,8 +29,12 @@ class LanguageModelProvider:
 class GroqLLMAdapter(LanguageModelProvider):
     def get_plugin(self):
         from livekit.plugins import openai
+        # Groq decommissioned llama-3.1-8b-instant on August 16, 2026.
+        # qwen/qwen3.6-27b is token-efficient (no reasoning token bloat) and supports tools.
+        # Override with GROQ_MODEL in .env if needed.
+        model = os.environ.get("GROQ_MODEL", "qwen/qwen3.6-27b")
         return openai.LLM(
-            model="openai/gpt-oss-20b",
+            model=model,
             base_url="https://api.groq.com/openai/v1",
             api_key=os.environ.get("GROQ_API_KEY", ""),
             temperature=0.6,
