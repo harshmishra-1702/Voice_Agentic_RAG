@@ -309,7 +309,46 @@ class VoiceOpsAgent(Agent):
             if not ctx_str:
                 ctx_str = "No browser context available."
                 
-            return f"Browser Context: {ctx_str}"
+            return f"Browser Context: {ctx_str}. If you need the full text of the page to answer the user's question, use the read_website_content tool with the URL."
+        except asyncio.CancelledError:
+            return ""
+
+    @function_tool(description="Extract and read the full markdown content of any website URL using the Jina AI Reader API. Use this when the user asks a question about a specific webpage URL.")
+    async def read_website_content(self, url: str) -> str:
+        dispatch_turn = self.turn_fence.current_turn_id
+        session = self.session
+        session.say("Reading the website content...", add_to_chat_ctx=False, allow_interruptions=True)
+        
+        try:
+            await asyncio.sleep(0.1)
+            if self.turn_fence.is_stale(dispatch_turn):
+                await self.turn_fence.cancel_stale(dispatch_turn)
+                return ""
+            
+            import urllib.request
+            import os
+            
+            def fetch_jina():
+                jina_url = f"https://r.jina.ai/{url}"
+                req = urllib.request.Request(jina_url)
+                api_key = os.environ.get("JINA_API_KEY")
+                if api_key:
+                    req.add_header("Authorization", f"Bearer {api_key}")
+                try:
+                    with urllib.request.urlopen(req, timeout=15) as response:
+                        return response.read().decode("utf-8")
+                except Exception as e:
+                    return f"Failed to fetch website content: {e}"
+                    
+            content = await asyncio.to_thread(fetch_jina)
+            self.turn_fence.mark_complete(dispatch_turn)
+            
+            # Truncate content if it's too massive (Groq limit safety)
+            max_chars = 12000
+            if len(content) > max_chars:
+                content = content[:max_chars] + "... [Content Truncated]"
+                
+            return f"Website Content for {url}:\n\n{content}\n\nCRITICAL: Keep your response concise (1-3 sentences maximum). DO NOT use markdown formatting."
         except asyncio.CancelledError:
             return ""
 

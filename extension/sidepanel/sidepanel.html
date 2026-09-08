@@ -1,23 +1,38 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>MemoryLab Companion</title>
+  <title>VoiceOps Companion</title>
   <link rel="stylesheet" href="sidepanel.css">
 </head>
 <body>
   <div class="container">
-    <h2>MemoryLab Companion</h2>
-    <div id="status">Connecting...</div>
+    <div class="header">
+      <h2>VoiceOps Companion</h2>
+      <div id="status-badge" class="badge">Idle</div>
+    </div>
     
     <div class="card">
-      <h3>Current Context</h3>
-      <div id="context-info">No context selected.</div>
-      <button id="send-context-btn">Send to VoiceOps</button>
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+        <h3 style="margin:0;">Target Context</h3>
+        <button id="refresh-context-btn" style="background:transparent; border:none; color:#60a5fa; cursor:pointer; font-size:0.75em; padding:2px 6px; width:auto; text-decoration:underline;">Re-detect Tab</button>
+      </div>
+      <div id="context-info">Detecting active page...</div>
+      <button id="send-context-btn">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle; margin-right: 5px;"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+        Transmit to VoiceOps
+      </button>
+    </div>
+
+    <div class="card telemetry-card">
+      <h3>Transmission Log</h3>
+      <div id="event-stream" class="event-stream">
+        <div class="log-entry sys">Waiting for context transmission...</div>
+      </div>
     </div>
 
     <div class="card">
-      <h3>MemoryLab Experiment</h3>
-      <button id="open-ml-btn">Open Local Dashboard</button>
+      <h3>MemoryLab Dashboard</h3>
+      <button id="open-ml-btn" class="secondary-btn">Open Local Console</button>
     </div>
   </div>
   <script src="sidepanel.js"></script>
