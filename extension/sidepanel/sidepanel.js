@@ -23,7 +23,7 @@ document.addEventListener('DOMContentLoaded', () => {
     btn.innerHTML = 'Transmitting...';
     logEvent(`Transmitting context: ${currentContext.url.substring(0, 30)}...`, 'info');
     
-    fetch('http://127.0.0.1:8000/api/v1/context', {
+    fetch('http://127.0.0.1:8082/api/v1/context', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(currentContext)
