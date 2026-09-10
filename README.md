@@ -1,6 +1,6 @@
 # VoiceOps — Voice-Native SRE Incident Runbook Copilot
 
-### 📺 Demo Video: [Watch the Demo on Google Drive](https://drive.google.com/file/d/your-link-here/view)
+### 📺 Demo Video: [Watch the Demo on Google Drive](https://drive.google.com/drive/folders/1GQSS7hS_7hS1L8v4ZnqKsxeVf-llKXtI)
 
 [![Rime TTS](https://img.shields.io/badge/TTS-Rime%20(coda%2Fastra)-blueviolet)](https://rime.ai/)
 [![LiveKit](https://img.shields.io/badge/Transport-LiveKit%20WebRTC-002B49)](https://livekit.io/)
